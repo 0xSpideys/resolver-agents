@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-08-21T12:05:08.437Z",
+  "commit": "a6baffb",
+  "toolchain": {
+    "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+    "sorobanSdk": "27.0.6",
+    "target": "wasm32v1-none"
+  },
+  "test": {
+    "ok": true,
+    "passed": 17,
+    "failed": 0,
+    "ignored": 0,
+    "suites": [
+      {
+        "suite": "math::tests",
+        "tests": [
+          {
+            "name": "all_wrong_stays_at_the_floor",
+            "result": "ok"
+          },
+          {
+            "name": "empty_winning_pool_is_an_error_not_a_division_by_zero",
+            "result": "ok"
+          },
+          {
+            "name": "even_record_lands_mid_band",
+            "result": "ok"
+          },
+          {
+            "name": "fee_split_conserves_value",
+            "result": "ok"
+          },
+          {
+            "name": "fee_split_known_value",
+            "result": "ok"
+          },
+          {
+            "name": "new_agent_gets_the_floor_weight",
+            "result": "ok"
+          },
+          {
+            "name": "one_sided_market_is_void",
+            "result": "ok"
+          },
+          {
+            "name": "payout_never_below_stake",
+            "result": "ok"
+          },
+          {
+            "name": "payouts_never_exceed_the_escrow",
+            "result": "ok"
+          },
+          {
+            "name": "perfect_record_reaches_the_ceiling",
+            "result": "ok"
+          },
+          {
+            "name": "resolver_rewards_are_proportional_to_weight",
+            "result": "ok"
+          },
+          {
+            "name": "resolver_share_with_no_correct_resolvers_is_zero",
+            "result": "ok"
+          },
+          {
+            "name": "sole_winner_takes_everything_after_fee",
+            "result": "ok"
+          },
+          {
+            "name": "stake_larger_than_pool_is_rejected",
+            "result": "ok"
+          },
+          {
+            "name": "tiny_pools_round_to_zero_fee_not_to_a_loss",
+            "result": "ok"
+          },
+          {
+            "name": "weight_base_is_the_documented_fixed_point",
+            "result": "ok"
+          },
+          {
+            "name": "weight_is_monotonic_in_accuracy",
+            "result": "ok"
+          }
+        ]
+      }
+    ]
+  },
+  "build": {
+    "ok": true,
+    "wasm": {
+      "name": "verdict_market.wasm",
+      "bytes": 7389,
+      "sha256": "937dca328e7c21712aa0ab58e1fd34f7274b3685f81d6b0c318527dbec58ba7a"
+    }
+  }
+}

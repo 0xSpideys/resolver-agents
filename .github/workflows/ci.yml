@@ -23,5 +23,13 @@ jobs:
         run: cargo test --all
       - name: Build wasm
         run: cargo build --target wasm32v1-none --release
-      - name: Report wasm hash
-        run: shasum -a 256 target/wasm32v1-none/release/*.wasm
+      - name: Regenerate site status report
+        run: node scripts/report.mjs
+        env:
+          CARGO: cargo
+      # The committed report.json is what Vercel renders (no cargo there).
+      # Regenerating here proves the script still works and that the numbers
+      # the site shows are reproducible. It is not diffed against the commit —
+      # generatedAt and commit hash differ by construction.
+      - name: Show generated report
+        run: node -e "const r=require('./apps/site/src/data/report.json');console.log(r.test.ok?'PASS':'FAIL',r.test.passed+'/'+(r.test.passed+r.test.failed),r.build.wasm&&r.build.wasm.sha256)"

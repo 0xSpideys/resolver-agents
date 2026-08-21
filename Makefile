@@ -25,3 +25,8 @@ clean:
 # Prints the sha256 of the built wasm for reproducible-build verification.
 hash: build
 	shasum -a 256 target/wasm32v1-none/release/*.wasm
+
+# Runs the real test suite + wasm build and writes the JSON the site's
+# /status page renders. Fails if anything is red.
+report:
+	node scripts/report.mjs

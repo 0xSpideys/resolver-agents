@@ -26,7 +26,11 @@ pub struct FeeSplit {
 /// `resolver_fee_bps`. Integer division floors at each step; the remainder is
 /// absorbed by `protocol_cut` so the three parts always sum back to
 /// `losing_pool` exactly and no value is created or destroyed.
-pub fn split_fees(losing_pool: i128, fee_bps: u32, resolver_fee_bps: u32) -> Result<FeeSplit, Error> {
+pub fn split_fees(
+    losing_pool: i128,
+    fee_bps: u32,
+    resolver_fee_bps: u32,
+) -> Result<FeeSplit, Error> {
     if losing_pool < 0 {
         return Err(Error::MathOverflow);
     }
@@ -51,7 +55,11 @@ pub fn split_fees(losing_pool: i128, fee_bps: u32, resolver_fee_bps: u32) -> Res
 /// The user always gets their own stake back plus a pro-rata slice of what the
 /// losing side forfeited. Rounding floors in the protocol's favour; the dust
 /// left in the contract is swept to the treasury by `sweep_dust`.
-pub fn parimutuel_payout(stake: i128, winning_pool: i128, distributable: i128) -> Result<i128, Error> {
+pub fn parimutuel_payout(
+    stake: i128,
+    winning_pool: i128,
+    distributable: i128,
+) -> Result<i128, Error> {
     if stake <= 0 {
         return Ok(0);
     }
@@ -71,7 +79,11 @@ pub fn parimutuel_payout(stake: i128, winning_pool: i128, distributable: i128) -
 /// Proportional to weight, so a resolver with a better Verdict track record
 /// earns more from the same market — the incentive that makes reputation worth
 /// accumulating rather than just a display badge.
-pub fn resolver_share(weight: u32, total_correct_weight: u32, resolver_pool: i128) -> Result<i128, Error> {
+pub fn resolver_share(
+    weight: u32,
+    total_correct_weight: u32,
+    resolver_pool: i128,
+) -> Result<i128, Error> {
     if total_correct_weight == 0 {
         return Ok(0);
     }
@@ -91,13 +103,7 @@ pub fn weight_from_avg(avg: i128, sample_count: u32, weight_min: u32, weight_max
     if sample_count == 0 || weight_max <= weight_min {
         return weight_min;
     }
-    let clamped = if avg < -100 {
-        -100
-    } else if avg > 100 {
-        100
-    } else {
-        avg
-    };
+    let clamped = avg.clamp(-100, 100);
     let span = (weight_max - weight_min) as i128;
     // shift [-100, 100] -> [0, 200]
     let offset = (clamped + 100) * span / 200;
@@ -113,7 +119,7 @@ pub fn avg_from_stats(correct: u32, wrong: u32) -> (i128, u32) {
         return (0, 0);
     }
     let sum = (correct as i128) * 100 - (wrong as i128) * 100;
-    (sum / total, (correct + wrong) as u32)
+    (sum / total, correct + wrong)
 }
 
 /// Convenience: local counters straight to a weight.
@@ -127,7 +133,10 @@ pub fn mul_div(a: i128, b: i128, d: i128) -> Result<i128, Error> {
     if d == 0 {
         return Err(Error::MathOverflow);
     }
-    a.checked_mul(b).ok_or(Error::MathOverflow)?.checked_div(d).ok_or(Error::MathOverflow)
+    a.checked_mul(b)
+        .ok_or(Error::MathOverflow)?
+        .checked_div(d)
+        .ok_or(Error::MathOverflow)
 }
 
 /// Sanity helper used by the settlement path: weight must stay inside the band.
@@ -182,7 +191,10 @@ mod tests {
     fn payout_never_below_stake() {
         let s = split_fees(500, FEE_BPS, RESOLVER_BPS).unwrap();
         let payout = parimutuel_payout(100, 1_000, s.distributable).unwrap();
-        assert!(payout >= 100, "a winner must never receive less than their stake");
+        assert!(
+            payout >= 100,
+            "a winner must never receive less than their stake"
+        );
     }
 
     #[test]
@@ -216,7 +228,10 @@ mod tests {
 
     #[test]
     fn stake_larger_than_pool_is_rejected() {
-        assert_eq!(parimutuel_payout(2_000, 1_000, 100), Err(Error::MathOverflow));
+        assert_eq!(
+            parimutuel_payout(2_000, 1_000, 100),
+            Err(Error::MathOverflow)
+        );
     }
 
     #[test]

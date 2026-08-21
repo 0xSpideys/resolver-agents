@@ -4,9 +4,6 @@
 outcomes are decided by 8004-registered resolver agents, not by an admin and not
 by a price feed.
 
-> Instawards 30-day scoped engagement · Stellar Türkiye chapter
-> Builder: Bertan Köfön · Chapter lead: İrem Koçi
-
 ---
 
 ## The problem
@@ -41,7 +38,7 @@ markets on Soroban already; there is no agent-resolution layer.
 |---|---|
 | [`docs/SPEC.md`](docs/SPEC.md) | Full technical specification — economics, state machine, storage, entrypoints, test plan |
 | [`docs/STACK.md`](docs/STACK.md) | Tech stack, verified tool versions, tooling gotchas |
-| [`docs/V2_ROADMAP.md`](docs/V2_ROADMAP.md) | The twelve extension points built into v1, and the follow-on grant shape |
+| [`docs/V2_ROADMAP.md`](docs/V2_ROADMAP.md) | The twelve extension points built into v1, and where the next version goes |
 | [`CLAUDE.md`](CLAUDE.md) | Working notes and invariants for anyone (human or agent) touching the code |
 
 ## Layout
@@ -49,7 +46,7 @@ markets on Soroban already; there is no agent-resolution layer.
 ```
 contracts/verdict-market/   Soroban contract (Rust)
 packages/sdk/               Generated TS bindings + client helpers
-apps/site/                  Next.js — public scope/progress page + the dApp
+apps/site/                  Next.js — project site, protocol docs, build status
 apps/resolver-agent/        Example 8004 resolver agent (Node)
 docs/                       Specification and planning
 scripts/                    Deploy, seed and demo scripts
@@ -59,9 +56,18 @@ scripts/                    Deploy, seed and demo scripts
 
 ```bash
 source "$HOME/.cargo/env"
-make test          # 17 unit tests on the payout and weighting math
+make test          # unit tests
 make build         # wasm32v1-none release build
 make hash          # sha256 of the built wasm, for reproducible-build checks
+make report        # runs both, writes apps/site/src/data/report.json
+```
+
+The site's `/status` page renders `report.json` — the same numbers `make report`
+prints in the terminal, never hand-written. Regenerate it whenever the suite
+changes so the published status stays honest.
+
+```bash
+pnpm --dir apps/site dev     # http://localhost:3000
 ```
 
 `stellar` CLI is a prebuilt binary at `~/.local/bin/stellar` (v27.1.0) — building it
@@ -80,25 +86,17 @@ Verdict does not reimplement 8004. It calls the deployed
 
 ## Honest limitations of v1
 
-Stated here rather than buried, because they are the shape of the next grant:
+Stated here rather than buried:
 
 - **Dispute resolution is centralised.** v1 ships a trusted backstop: if someone
   challenges a tally, the curator decides. v2 replaces that address with a staked
   arbitration contract. The hook is a single `Address` in config.
 - **Market creation is curated.** Anyone can trade and any registered agent can
   resolve, but only the curator opens markets. Permissionless creation needs spam
-  control that does not fit in 30 days.
+  control that is not in this version.
 - **Binary outcomes only.** The types are already `u32`; a runtime guard is the
   only thing gating multi-outcome markets.
 - **Testnet only.** Mainnet needs an audit.
-
-## Deliverables
-
-| | Deliverable | Status |
-|---|---|---|
-| D1 | Core Soroban market contract — positions, escrow, fees, settlement | in progress |
-| D2 | 8004 resolver layer — evidence, weighting, bonds, rewards, penalties | not started |
-| D3 | Demo UI, end-to-end flow, evidence package | not started |
 
 ## License
 

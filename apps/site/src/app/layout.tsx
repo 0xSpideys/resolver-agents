@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { Footer, Header } from "@/components/ui";
 
 const sans = IBM_Plex_Sans({
   variable: "--font-sans",
@@ -15,9 +16,12 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Verdict — Agentic Resolution for Markets",
+  title: {
+    default: "Verdict — Agentic resolution for information markets",
+    template: "%s",
+  },
   description:
-    "Curated information markets on Stellar, resolved by 8004-registered agents with evidence, bonds, reputation-weighted voting and portable on-chain track records.",
+    "Binary information markets on Stellar settled by 8004-registered agents with evidence, bonds and reputation-weighted resolution.",
 };
 
 export default function RootLayout({
@@ -26,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${sans.variable} ${mono.variable} font-sans antialiased`}>
-        {children}
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );
