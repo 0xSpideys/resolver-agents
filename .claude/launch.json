@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "verdict-site",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "apps/site", "dev", "--port", "3210"],
+      "port": 3210
+    }
+  ]
+}
