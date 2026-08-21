@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-21T15:01:39.140Z",
-  "commit": "c1af3e9",
+  "generatedAt": "2026-08-21T15:26:30.653Z",
+  "commit": "237489c",
   "toolchain": {
     "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
     "sorobanSdk": "27.0.6",
@@ -199,9 +199,14 @@
   "build": {
     "ok": true,
     "wasm": {
-      "name": "verdict_market.wasm",
-      "bytes": 70912,
-      "sha256": "3d0b5682bd7833652ff9ac2262942e38e5fe7b25bfb33ad3e04c97220ec391cc"
+      "name": "verdict_market.optimized.wasm",
+      "bytes": 39758,
+      "sha256": "6b5f9f2b495a1a9e4bc0ee428859342ef7ff0be7306917e95abe49ce8d47219f"
+    },
+    "onChain": {
+      "contractId": "CD75VOBNOPZQJ2ZLV5CE2JTIQFE6BFBJK2KNLA26JPXEH223L3RSLHO5",
+      "sha256": "6b5f9f2b495a1a9e4bc0ee428859342ef7ff0be7306917e95abe49ce8d47219f",
+      "matchesLocalBuild": true
     }
   }
 }

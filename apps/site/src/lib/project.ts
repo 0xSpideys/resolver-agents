@@ -161,16 +161,75 @@ export const registries = {
   ],
 };
 
-/** Verdict's own deployment. Filled in when the contract goes to testnet. */
 export const deployment: {
   network: string;
   contractId: string;
-  wasmHash: string;
+  deployTx: string;
+  token: string;
   deployedAt: string;
-} | null = null;
+} | null = {
+  network: "testnet",
+  contractId: "CD75VOBNOPZQJ2ZLV5CE2JTIQFE6BFBJK2KNLA26JPXEH223L3RSLHO5",
+  deployTx: "93752ea58e1a7cba7e7dd7c1d2d5284fbba7f9b9dbca2cf2b724b0f4c31f8515",
+  token: "CBEJPXHJ3G3YENGGTNEYC6WAQFM6Q5JKRUIKV4AJ25KBWOQ7J6CVLPHU",
+  deployedAt: "2026-08-21",
+};
 
-/** Notable testnet transactions, appended as the demo flow is built. */
-export const transactions: { label: string; hash: string }[] = [];
+/**
+ * A real market run end to end on testnet against the live 8004 registries.
+ * Reproduce it with `./scripts/demo.sh`.
+ */
+export const demoRun = {
+  marketId: 1,
+  question: "Binary demo market, resolution criteria hashed on-chain",
+  stakes: [
+    { who: "alice", side: "YES", amount: "60 VUSD" },
+    { who: "bob", side: "NO", amount: "40 VUSD" },
+  ],
+  tally: { outcome: "YES", weightFor: 200, weightTotal: 300, submissions: 3 },
+  settlement: {
+    distributable: "39.2 VUSD",
+    resolverPool: "0.48 VUSD",
+    alicePayout: "99.2 VUSD from a 60 VUSD stake",
+    treasury: "10.32 VUSD — one slashed bond plus the protocol cut",
+  },
+  agents: [
+    {
+      id: 18,
+      call: "YES",
+      correct: true,
+      settled: "bond returned + 0.24 VUSD",
+      stats: "1 correct / 0 wrong",
+      nextWeight: "3.00×",
+      onChainRecord: "+100",
+    },
+    {
+      id: 19,
+      call: "YES",
+      correct: true,
+      settled: "bond returned + 0.24 VUSD",
+      stats: "1 correct / 0 wrong",
+      nextWeight: "3.00×",
+      onChainRecord: "+100",
+    },
+    {
+      id: 20,
+      call: "NO",
+      correct: false,
+      settled: "10 VUSD bond slashed",
+      stats: "0 correct / 1 wrong",
+      nextWeight: "1.00×",
+      onChainRecord: "−100",
+    },
+  ],
+  /**
+   * Read straight back off the live Reputation Registry with Verdict as the
+   * only trusted client — proof that the local counters and the public,
+   * portable record agree.
+   */
+  reputationReadback:
+    'get_summary(agent_id, [verdict], "verdict", "") → #18 +100 · #19 +100 · #20 −100',
+};
 
 export const limitations = [
   {

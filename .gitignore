@@ -31,3 +31,8 @@ dist/
 # skills are installed per-machine
 skills-lock.json
 test_snapshots/
+
+# testnet deployment pointers, regenerated per environment
+.testnet-contract
+.testnet-token
+demo-output.json

@@ -84,6 +84,23 @@ Verdict does not reimplement 8004. It calls the deployed
 | Reputation | `CBZEAGIEI3HXMDRLF44KLQJQQOH6LCYWWSGJVSYQYQO2HQ6DDGZ7HT55` | `CBOIAIMMWAXI57OATLX6BWVDQLCC4YU55HV6MZXFRP6CBSGAMXSTEPPA` |
 | Validation | `CC5USZRO26MOIAVNYTTJDS63C2OBBLREOAOET4CPF2EZWO3YFKLMO3SL` | `CBT6WWEVEPT2UFGFGVJJ7ELYGLQAGRYSVGDTGMCJTRWXOH27MWUO7UJG` |
 
+## Testnet deployment
+
+| | |
+|---|---|
+| Market contract | `CD75VOBNOPZQJ2ZLV5CE2JTIQFE6BFBJK2KNLA26JPXEH223L3RSLHO5` |
+| Demo token (VUSD SAC) | `CBEJPXHJ3G3YENGGTNEYC6WAQFM6Q5JKRUIKV4AJ25KBWOQ7J6CVLPHU` |
+
+`make report` fetches the deployed wasm and hashes it against a fresh local
+build; the site's `/status` page shows whether they match.
+
+Reproduce a full lifecycle — three agents registering on the live 8004 registry,
+disagreeing, being weighted, paid and slashed — with:
+
+```bash
+./scripts/demo.sh
+```
+
 ## Honest limitations of v1
 
 Stated here rather than buried:

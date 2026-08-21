@@ -10,7 +10,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, statSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -20,6 +20,17 @@ const outDir = join(root, "apps/site/src/data");
 const outFile = join(outDir, "report.json");
 
 const cargo = process.env.CARGO ?? join(process.env.HOME, ".cargo/bin/cargo");
+
+// `stellar contract build` shells out to cargo, so the child needs cargo on its
+// PATH. Node does not inherit a login shell, so prepend it explicitly.
+const childEnv = {
+  ...process.env,
+  PATH: [
+    join(process.env.HOME, ".cargo/bin"),
+    join(process.env.HOME, ".local/bin"),
+    process.env.PATH,
+  ].join(":"),
+};
 
 function run(args, opts = {}) {
   try {
@@ -60,20 +71,79 @@ console.log("· cargo test");
 const test = run(["test", "--all", "--", "--test-threads=1"]);
 const parsed = parseTests(test.out);
 
-console.log("· cargo build --target wasm32v1-none --release");
-const build = run(["build", "--target", "wasm32v1-none", "--release"]);
+// Build with `stellar contract build`, not plain cargo: the CLI embeds contract
+// metadata (SDK version, spec entries) into the wasm, so a cargo-only build
+// produces a different hash from the artifact that actually gets deployed.
+const stellarBin = process.env.STELLAR ?? join(process.env.HOME, ".local/bin/stellar");
+const plainPath = join(root, "target/wasm32v1-none/release/verdict_market.wasm");
+const optimizedPath = join(root, "target/wasm32v1-none/release/verdict_market.optimized.wasm");
 
-let wasm = null;
-const wasmPath = join(root, "target/wasm32v1-none/release/verdict_market.wasm");
+// Remove the previous artifacts first. Cargo considers the wasm fresh if a
+// plain `cargo build` produced one earlier in this session, and `stellar
+// contract build` would then skip the rebuild — leaving the optimizer to hash
+// an artifact that was never built the way we deploy it.
+for (const p of [plainPath, optimizedPath]) rmSync(p, { force: true });
+
+console.log("· stellar contract build");
+let build = { ok: false };
 try {
-  const buf = readFileSync(wasmPath);
-  wasm = {
-    name: "verdict_market.wasm",
-    bytes: statSync(wasmPath).size,
-    sha256: createHash("sha256").update(buf).digest("hex"),
+  execFileSync(stellarBin, ["contract", "build"], { cwd: root, stdio: "ignore", env: childEnv });
+  build = { ok: true };
+} catch {
+  // No CLI (e.g. CI). Fall back to cargo so the suite still reports, but the
+  // hash below will not be comparable to a deployment.
+  console.log("  (stellar CLI unavailable, falling back to cargo)");
+  build = run(["build", "--target", "wasm32v1-none", "--release"]);
+}
+
+console.log("· stellar contract optimize");
+try {
+  execFileSync(stellarBin, ["contract", "optimize", "--wasm", plainPath], {
+    cwd: root,
+    stdio: "ignore",
+    env: childEnv,
+  });
+} catch {
+  // Same fallback: report the unoptimized artifact rather than a wrong hash.
+}
+
+function hashOf(path, name) {
+  try {
+    return {
+      name,
+      bytes: statSync(path).size,
+      sha256: createHash("sha256").update(readFileSync(path)).digest("hex"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// The optimized artifact is the one that gets deployed, so it is the hash worth
+// publishing — comparing the plain build against an on-chain contract would
+// always mismatch.
+const wasm =
+  hashOf(optimizedPath, "verdict_market.optimized.wasm") ??
+  hashOf(plainPath, "verdict_market.wasm");
+
+/** Fetch the deployed wasm and check it against what we just built. */
+let onChain = null;
+try {
+  const contractId = readFileSync(join(root, ".testnet-contract"), "utf8").trim();
+  const out = join(root, "target/fetched.wasm");
+  execFileSync(
+    stellarBin,
+    ["contract", "fetch", "--network", "testnet", "--id", contractId, "-o", out],
+    { cwd: root, stdio: "ignore", env: childEnv },
+  );
+  const fetched = hashOf(out, "deployed");
+  onChain = {
+    contractId,
+    sha256: fetched?.sha256 ?? null,
+    matchesLocalBuild: !!fetched && !!wasm && fetched.sha256 === wasm.sha256,
   };
 } catch {
-  wasm = null;
+  onChain = null;
 }
 
 const rustc = (() => {
@@ -118,7 +188,7 @@ const report = {
       }, {}),
     ).map(([suite, tests]) => ({ suite, tests })),
   },
-  build: { ok: build.ok, wasm },
+  build: { ok: build.ok, wasm, onChain },
 };
 
 mkdirSync(outDir, { recursive: true });
@@ -126,7 +196,8 @@ writeFileSync(outFile, JSON.stringify(report, null, 2) + "\n");
 
 console.log(
   `\n${report.test.ok ? "PASS" : "FAIL"}  ${report.test.passed} passed, ${report.test.failed} failed` +
-    `${wasm ? `  ·  wasm ${wasm.bytes}B ${wasm.sha256.slice(0, 12)}…` : "  ·  no wasm"}`,
+      `${wasm ? `  ·  wasm ${wasm.bytes}B ${wasm.sha256.slice(0, 12)}…` : "  ·  no wasm"}` +
+    `${onChain ? `  ·  on-chain ${onChain.matchesLocalBuild ? "MATCHES" : "DIFFERS"}` : ""}`,
 );
 console.log(`written: ${outFile}`);
 
