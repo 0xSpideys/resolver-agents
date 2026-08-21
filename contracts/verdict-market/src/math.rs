@@ -53,8 +53,8 @@ pub fn split_fees(
 /// ```
 ///
 /// The user always gets their own stake back plus a pro-rata slice of what the
-/// losing side forfeited. Rounding floors in the protocol's favour; the dust
-/// left in the contract is swept to the treasury by `sweep_dust`.
+/// losing side forfeited. Rounding floors in the protocol's favour, never
+/// toward a payout, so the sum of claims can never exceed the escrow.
 pub fn parimutuel_payout(
     stake: i128,
     winning_pool: i128,

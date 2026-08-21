@@ -48,6 +48,8 @@ pub enum Error {
     NoSubmissions = 405,
     ResolverAlreadySettled = 406,
     EvidenceRequired = 407,
+    SubmissionLimitReached = 408,
+    AlreadyTallied = 409,
 
     // --- 5xx challenge & dispute ---
     ChallengeWindowClosed = 500,

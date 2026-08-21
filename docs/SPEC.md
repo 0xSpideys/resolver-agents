@@ -1,11 +1,10 @@
 # Verdict — Technical Specification v1
 
 **Agentic Resolution for Markets** · Stellar / Soroban
-Instawards 30-day scoped engagement · Stellar Türkiye chapter
 
-> **Status:** Week 1 deliverable. This document is the contract between the design
-> and the implementation. If the code diverges from this, one of the two is wrong
-> and we fix it before moving on.
+> This document is the contract between the design and the implementation. If the
+> code diverges from it, one of the two is wrong — fix it deliberately rather
+> than letting them drift.
 
 ---
 
@@ -55,8 +54,9 @@ payout(user) = stake + stake × distributable / winning_pool
 
 A winner never receives less than their own stake back. Rounding floors at every
 step; the three fee components always sum back to `losing_pool` exactly, and
-per-user flooring leaves dust in the contract which `sweep_dust` sends to the
-treasury. Both invariants are unit-tested in `math.rs`.
+per-user flooring leaves dust in the contract. Both invariants are unit-tested in
+`math.rs`, and an end-to-end test asserts the contract ends empty once fees are
+withdrawn.
 
 ### 2.2 Parameters
 
@@ -92,7 +92,7 @@ resolution systems and it is the sentence the demo video leads with.
 | Upheld challenge | challenger bond returned + `challenger_reward` from treasury |
 | Rejected challenge | challenger bond → protocol treasury |
 | Protocol fee | treasury |
-| Rounding dust | treasury, via `sweep_dust` |
+| Rounding dust | remains in the contract; sweeping deferred |
 
 > **Design note.** Slashed value routes to the treasury per the agreed rule. The
 > challenger reward is paid *out of* the treasury rather than directly out of the
@@ -144,7 +144,14 @@ A market that cannot pay anyone must not pretend to settle. Any of these voids i
 
 1. Either outcome pool is empty at `close_market` — there is no counterparty.
 2. No resolver submitted by `resolve_deadline`.
-3. The curator explicitly voids it (question turned out ambiguous or unresolvable).
+3. The weighted tally is an exact tie — there is no defensible majority.
+4. The winning pool is empty at settlement — nobody could be paid.
+5. The curator explicitly voids it (question turned out ambiguous or unresolvable).
+
+**Voiding returns `Ok`, never `Err`.** Soroban rolls back state on an error
+return, so erroring out of `tally` would discard the `Void` write and leave the
+market stuck in `Resolving` with the escrow trapped behind it. This is enforced
+by `no_submissions_voids_the_market`.
 
 On void: every stake is refundable 1:1, every resolver bond is returned, **no fee
 is taken**, and no 8004 feedback is written.
@@ -295,10 +302,8 @@ Notes:
 | `set_config(admin, cfg)` | admin | never retroactive |
 | `set_registries(admin, identity, reputation)` | admin | 8004 redeploy escape hatch |
 | `set_dispute_resolver(admin, addr)` | admin | **v2 points this at arbitration** |
-| `pause(admin)` / `unpause(admin)` | admin | |
+| `set_paused(paused)` | admin | |
 | `withdraw_fees(admin, token, to)` | admin | |
-| `sweep_dust(admin, market_id)` | admin | post-settlement rounding remainder |
-| `propose_upgrade` / `execute_upgrade` / `cancel_upgrade` | admin | timelocked |
 
 ### Market lifecycle
 

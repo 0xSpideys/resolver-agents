@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-21T12:05:08.437Z",
-  "commit": "a6baffb",
+  "generatedAt": "2026-08-21T15:01:39.140Z",
+  "commit": "c1af3e9",
   "toolchain": {
     "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
     "sorobanSdk": "27.0.6",
@@ -8,7 +8,7 @@
   },
   "test": {
     "ok": true,
-    "passed": 17,
+    "passed": 43,
     "failed": 0,
     "ignored": 0,
     "suites": [
@@ -84,6 +84,115 @@
             "result": "ok"
           }
         ]
+      },
+      {
+        "suite": "test",
+        "tests": [
+          {
+            "name": "a_loser_has_nothing_to_claim",
+            "result": "ok"
+          },
+          {
+            "name": "a_one_sided_book_voids_and_refunds_in_full",
+            "result": "ok"
+          },
+          {
+            "name": "a_rejected_challenge_forfeits_the_bond_to_the_treasury",
+            "result": "ok"
+          },
+          {
+            "name": "a_user_can_hold_both_sides_and_still_settles_correctly",
+            "result": "ok"
+          },
+          {
+            "name": "a_wrong_resolver_loses_its_bond_and_the_record_says_so",
+            "result": "ok"
+          },
+          {
+            "name": "a_zero_bet_is_rejected",
+            "result": "ok"
+          },
+          {
+            "name": "an_agent_gets_one_submission_per_market",
+            "result": "ok"
+          },
+          {
+            "name": "an_exact_weight_tie_voids_rather_than_guessing",
+            "result": "ok"
+          },
+          {
+            "name": "an_unregistered_agent_cannot_submit",
+            "result": "ok"
+          },
+          {
+            "name": "an_upheld_challenge_flips_the_outcome_and_pays_the_challenger",
+            "result": "ok"
+          },
+          {
+            "name": "being_right_raises_your_weight_on_the_next_market",
+            "result": "ok"
+          },
+          {
+            "name": "config_changes_do_not_touch_a_market_already_trading",
+            "result": "ok"
+          },
+          {
+            "name": "double_claim_is_rejected",
+            "result": "ok"
+          },
+          {
+            "name": "escrow_is_conserved_across_a_full_settlement",
+            "result": "ok"
+          },
+          {
+            "name": "evidence_is_mandatory",
+            "result": "ok"
+          },
+          {
+            "name": "finalize_is_blocked_while_the_challenge_window_is_open",
+            "result": "ok"
+          },
+          {
+            "name": "full_lifecycle_pays_winners_and_correct_resolvers",
+            "result": "ok"
+          },
+          {
+            "name": "multi_outcome_markets_are_gated_not_broken",
+            "result": "ok"
+          },
+          {
+            "name": "no_submissions_voids_the_market",
+            "result": "ok"
+          },
+          {
+            "name": "only_the_agent_owner_can_submit_for_it",
+            "result": "ok"
+          },
+          {
+            "name": "pausing_stops_new_activity_but_not_settlement",
+            "result": "ok"
+          },
+          {
+            "name": "quote_payout_tracks_the_pools",
+            "result": "ok"
+          },
+          {
+            "name": "resolvers_cannot_be_settled_twice",
+            "result": "ok"
+          },
+          {
+            "name": "tally_is_blocked_while_resolvers_can_still_submit",
+            "result": "ok"
+          },
+          {
+            "name": "trading_stops_at_close_time",
+            "result": "ok"
+          },
+          {
+            "name": "weight_is_snapshotted_so_a_later_result_cannot_rewrite_an_old_tally",
+            "result": "ok"
+          }
+        ]
       }
     ]
   },
@@ -91,8 +200,8 @@
     "ok": true,
     "wasm": {
       "name": "verdict_market.wasm",
-      "bytes": 7389,
-      "sha256": "937dca328e7c21712aa0ab58e1fd34f7274b3685f81d6b0c318527dbec58ba7a"
+      "bytes": 70912,
+      "sha256": "3d0b5682bd7833652ff9ac2262942e38e5fe7b25bfb33ad3e04c97220ec391cc"
     }
   }
 }

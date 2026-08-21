@@ -30,3 +30,4 @@ dist/
 
 # skills are installed per-machine
 skills-lock.json
+test_snapshots/

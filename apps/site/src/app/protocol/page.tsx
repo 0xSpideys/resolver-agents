@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const transitions = [
   ["Open", "close_ts reached", "Resolving", "Trading stops. One-sided books void instead."],
   ["Resolving", "resolve_deadline passed, ≥1 submission", "Tallied", "Weighted majority becomes provisional; challenge window opens."],
-  ["Resolving", "no submissions by deadline", "Void", "Full refund, all bonds returned, no fee."],
+  ["Resolving", "no submissions, or an exact weight tie", "Void", "Full refund, all bonds returned, no fee, no reputation recorded."],
   ["Tallied", "challenge()", "Disputed", "Challenger posts 2× the resolver bond."],
   ["Tallied", "challenge window elapsed", "Settled", "Permissionless finalise."],
   ["Disputed", "resolve_dispute()", "Settled", "Dispute resolver sets the final outcome."],
@@ -87,10 +87,12 @@ distributable = losing_pool − fee
 payout(user)  = stake + stake × distributable / winning_pool`}
         </pre>
         <p className="mt-4 text-sm leading-relaxed text-muted">
-          Integer division floors at every step. The three fee components always sum
-          back to <Mono>losing_pool</Mono> exactly, and per-user flooring leaves dust
-          in the contract which <Mono>sweep_dust</Mono> forwards to the treasury. Both
-          properties are covered by unit tests.
+          Integer division floors at every step, always toward the protocol and
+          never toward a payout. The three fee components sum back to{" "}
+          <Mono>losing_pool</Mono> exactly, and a resolver pool with no rightful
+          recipient is accrued to the treasury rather than left stranded. Any
+          remaining per-claim dust stays in the contract; sweeping it is deferred.
+          Both properties are covered by tests.
         </p>
       </Section>
 

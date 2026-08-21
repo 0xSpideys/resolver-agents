@@ -53,7 +53,7 @@ export const properties = [
   },
   {
     title: "Nothing silently strands",
-    body: "A market with an empty side, or with no resolver submissions, voids rather than settling. Every stake refunds 1:1, every bond returns, no fee is taken.",
+    body: "A market with an empty side, no resolver submissions, or an exact weight tie voids rather than settling. Every stake refunds 1:1, every bond returns, no fee is taken — and voiding returns success, because an error would revert the state write and trap the escrow.",
   },
 ];
 
@@ -111,18 +111,21 @@ export const economics = [
 ];
 
 export const entrypoints = [
-  { group: "Trading", fns: ["create_market", "bet", "close_market", "claim", "refund"] },
+  {
+    group: "Trading",
+    fns: ["create_market", "bet", "close_market", "void_market", "claim", "refund"],
+  },
   {
     group: "Resolution",
     fns: ["submit_outcome", "tally", "challenge", "resolve_dispute", "finalize", "settle_resolvers"],
   },
   {
     group: "Reads",
-    fns: ["get_market", "get_pools", "get_position", "get_submissions", "get_tally", "get_agent_stats", "get_weight", "quote_payout"],
+    fns: ["get_market", "get_pools", "get_position", "get_submissions", "get_challenge", "get_agent_stats", "get_weight", "quote_payout", "treasury_balance"],
   },
   {
     group: "Admin",
-    fns: ["set_config", "set_registries", "set_dispute_resolver", "pause", "withdraw_fees", "propose_upgrade"],
+    fns: ["set_config", "set_registries", "set_dispute_resolver", "set_paused", "withdraw_fees"],
   },
 ];
 

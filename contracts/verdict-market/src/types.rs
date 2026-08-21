@@ -124,6 +124,13 @@ pub struct Market {
     /// Sum of every resolver bond currently held for this market.
     pub bond_pool: i128,
 
+    /// Snapshotted at settlement so `claim` is a pure lookup and every claimer
+    /// computes against the same numbers.
+    pub distributable: i128,
+    pub resolver_pool: i128,
+    /// Set once `settle_resolvers` has run, so it cannot run twice.
+    pub resolvers_settled: bool,
+
     /// Economic terms are snapshotted at creation. Changing `Config` must never
     /// retroactively change the deal a user already staked into.
     pub fee_bps: u32,
@@ -177,7 +184,7 @@ pub struct AgentStats {
 
 /// Result of a weighted tally, returned by read calls and used by the UI.
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TallyResult {
     pub outcome: u32,
     pub weight_for: u32,
