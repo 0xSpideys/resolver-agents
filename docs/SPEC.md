@@ -405,20 +405,6 @@ local `AgentStats`.
    Contract is token-agnostic, so this is a demo-quality question, not a design one.
 3. **`MAX_SUBMISSIONS` per market.** Needs to be low enough that `tally` fits the
    resource budget. Measure in Phase 2 rather than guessing.
-4. **Sprint start date.** The SOW says 16.06.2026; today is later than that.
-   Confirm the official 30-day window with the chapter lead.
-
----
-
-## 11. Phase plan
-
-| Phase | Days | Output | SOW deliverable |
-|---|---|---|---|
-| 0 — Foundations | 1–4 | Repo, CI, 8004 bindings, **live 8004 spike** | — |
-| 1 — Market core | 5–12 | Trading, escrow, settlement, void paths | D1 |
-| 2 — Resolver layer | 13–21 | Submissions, weighting, challenge, slashing, 8004 writeback | D2 |
-| 3 — Demo | 22–28 | Next.js app, example resolver agent, evidence pack | D3 |
-| 4 — Close-out | 29–30 | Docs, v2 roadmap, handover | — |
-
-**Phase 0 exists to fail early.** If the 8004 spike does not work on Day 4 the plan
-can still change. On Day 20 it cannot.
+4. **Challenge economics.** `challenger_reward` is currently a flat amount capped
+   by the treasury balance. Whether that is enough to make challenging worthwhile
+   at realistic market sizes needs modelling, not a guess.

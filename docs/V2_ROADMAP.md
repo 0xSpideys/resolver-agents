@@ -2,7 +2,7 @@
 
 Every item below is a deliberate hook in the v1 code. The cost column is honest:
 building the hook now is cheap, retrofitting it later is not. This document is
-also the skeleton of the follow-on grant application.
+also the shape of the next version.
 
 ## The twelve hooks
 
@@ -14,14 +14,14 @@ also the skeleton of the follow-on grant application.
 | 4 | `curator: Address` | Multisig / DAO governance | address swap |
 | 5 | `token: Address` per market, SEP-41 | Test token → testnet USDC → mainnet USDC → multi-token | already parameterised |
 | 6 | All economics in `Config` storage | Governance-tunable parameters | already storage |
-| 7 | Timelocked `propose_upgrade` | Mainnet upgrades without losing state | `contract.rs` |
+| 7 | No upgrade path yet; `Config` already holds every tunable | Timelocked upgrades without losing state | add `propose_upgrade` to `contract.rs` |
 | 8 | Event on every transition | Indexer, leaderboards, analytics | no contract change needed |
 | 9 | `Position(market, user, outcome)` | Transferable positions, secondary market | no storage migration |
 | 10 | Pricing isolated in `math.rs` | CPMM / LMSR continuous pricing | replace one module |
 | 11 | `create_market` curator-only, signature already has a bond slot | Permissionless creation + spam control | remove auth check, enable bond |
 | 12 | Resolver agent is a separate package | Third-party resolver SDK and onboarding | already decoupled |
 
-## The three grant pillars
+## The three pillars of v2
 
 ### Pillar 1 — Decentralised arbitration
 Replace the v1 trusted backstop with a staked juror pool and an escalation game.
