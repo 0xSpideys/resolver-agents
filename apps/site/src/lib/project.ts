@@ -18,6 +18,7 @@ export const project = {
 export const nav = [
   { href: "/", label: "Overview" },
   { href: "/protocol", label: "Protocol" },
+  { href: "/agents", label: "Agents" },
   { href: "/status", label: "Status" },
 ];
 
@@ -180,55 +181,114 @@ export const deployment: {
  * Reproduce it with `./scripts/demo.sh`.
  */
 export const demoRun = {
-  marketId: 1,
-  question: "Binary demo market, resolution criteria hashed on-chain",
+  marketId: 3,
+  question: "Has the Stellar testnet passed ledger 4,295,051?",
+  questionNote:
+    "A deliberately boring question, and that is the point — checkable by anyone against a public endpoint, with no API key and no argument about what the right answer was.",
   stakes: [
     { who: "alice", side: "YES", amount: "60 VUSD" },
     { who: "bob", side: "NO", amount: "40 VUSD" },
   ],
   tally: { outcome: "YES", weightFor: 200, weightTotal: 300, submissions: 3 },
   settlement: {
-    distributable: "39.2 VUSD",
-    resolverPool: "0.48 VUSD",
     alicePayout: "99.2 VUSD from a 60 VUSD stake",
-    treasury: "10.32 VUSD — one slashed bond plus the protocol cut",
+    treasury: "one slashed bond plus the protocol cut",
   },
   agents: [
     {
-      id: 18,
+      id: 21,
+      source: "stellar-ledger",
       call: "YES",
       correct: true,
       settled: "bond returned + 0.24 VUSD",
       stats: "1 correct / 0 wrong",
-      nextWeight: "3.00×",
+      nextWeight: "3.00\u00d7",
       onChainRecord: "+100",
     },
     {
-      id: 19,
+      id: 22,
+      source: "stellar-ledger",
       call: "YES",
       correct: true,
       settled: "bond returned + 0.24 VUSD",
       stats: "1 correct / 0 wrong",
-      nextWeight: "3.00×",
+      nextWeight: "3.00\u00d7",
       onChainRecord: "+100",
     },
     {
-      id: 20,
+      id: 23,
+      source: "contrarian (demo)",
       call: "NO",
       correct: false,
       settled: "10 VUSD bond slashed",
       stats: "0 correct / 1 wrong",
-      nextWeight: "1.00×",
-      onChainRecord: "−100",
+      nextWeight: "1.00\u00d7",
+      onChainRecord: "\u2212100",
     },
   ],
-  /**
-   * Read straight back off the live Reputation Registry with Verdict as the
-   * only trusted client — proof that the local counters and the public,
-   * portable record agree.
-   */
   reputationReadback:
-    'get_summary(agent_id, [verdict], "verdict", "") → #18 +100 · #19 +100 · #20 −100',
+    'get_summary(agent_id, [verdict], "verdict", "") \u2192 #21 +100 \u00b7 #22 +100 \u00b7 #23 \u2212100',
+};
+
+/**
+ * Nothing in the run above was decided by a human. Three separate processes
+ * registered themselves, read the network, and concluded independently.
+ */
+export const agentRun = {
+  intro:
+    "Three independent processes, each holding its own 8004 identity and its own key. Nobody told them the answer \u2014 each read the network, formed a conclusion, wrote down its reasoning and staked a bond on it.",
+  steps: [
+    {
+      title: "Mint an identity",
+      body: "The agent registers itself on the 8004 Identity Registry and gets an id. Its registration metadata is embedded inline, so there is no profile page to keep alive.",
+    },
+    {
+      title: "Find work",
+      body: "It scans for markets that have closed to trading, are inside the resolve window, and that it has not already submitted to.",
+    },
+    {
+      title: "Observe",
+      body: "It reads the threshold out of the market's question and checks it against live Horizon data. The source reads the question \u2014 the answer is not wired into the agent.",
+    },
+    {
+      title: "Write evidence",
+      body: "Observation, reasoning and source URLs go into a document, hashed over canonical JSON so two agents seeing the same facts commit to the same hash.",
+    },
+    {
+      title: "Submit and stake",
+      body: "Outcome, evidence URI and hash go on-chain with a flat bond. From there the contract decides who was right, and the agent lives with it.",
+    },
+  ],
+  evidence: {
+    note: "Evidence is embedded in the submission as a base64 data URI, not hosted. It cannot rot behind a dead link or be edited after the fact \u2014 the hash on-chain commits to bytes anyone can decode straight out of the contract.",
+    command: "pnpm exec tsx src/cli.ts verify 3 21",
+    output: `market     #3
+agent      #21
+outcome    YES
+weight     1.00x
+hash       75ba69a6dbe03fb8fe1217ea1aa0c6811dea6e3bc2ec4d27c2afac4dbcf9f124
+verified   true
+
+--- evidence ---
+{
+  "agent": 21,
+  "market": "3",
+  "observed": {
+    "closedAt": "2026-08-23T22:14:02Z",
+    "latestLedger": 4300063,
+    "threshold": 4295051
+  },
+  "outcome": 1,
+  "reasoning": "Latest closed ledger is 4300063; the question asks whether the
+                network passed 4295051. It did, so the outcome is YES.",
+  "source": "stellar-ledger",
+  "sources": ["https://horizon-testnet.stellar.org/ledgers?order=desc&limit=1"]
+}`,
+  },
+  tie: {
+    title: "A tie voids the market",
+    body: "An earlier run ended with one agent on each side at equal weight. With no majority there is no defensible outcome, so the market voided: every stake refundable in full, every bond returned, no fee taken, and nothing recorded about who was right. Verified on testnet as market #2.",
+  },
 };
 
 export const limitations = [

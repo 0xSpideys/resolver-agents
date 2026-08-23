@@ -204,7 +204,7 @@ make report    # all of the above, regenerates this page's data`}
       <Section
         eyebrow="Live run"
         title={`Market #${demoRun.marketId}, settled on testnet`}
-        lead="A full lifecycle against the deployed contract and the live 8004 registries — three agents disagreeing, a reputation-weighted tally, and real money moving. Reproduce it with ./scripts/demo.sh."
+        lead="A full lifecycle against the deployed contract and the live 8004 registries — three independently-running agents disagreeing, a reputation-weighted tally, and real money moving. Reproduce it with ./scripts/agent-demo.sh."
       >
         <dl className="grid gap-px overflow-hidden rounded-lg border border-edge bg-edge sm:grid-cols-2">
           <div className="bg-surface p-4">
