@@ -291,6 +291,38 @@ verified   true
   },
 };
 
+/**
+ * Every branch of the state machine, exercised against the deployed contract on
+ * testnet. Unit tests cover these too; this is the same behaviour with real
+ * money, real 8004 calls and real network latency.
+ */
+export const coverage = [
+  {
+    market: 1,
+    branch: "Settle",
+    detail:
+      "Two agents agree, the market finalises unchallenged, the winner claims and the correct resolvers are paid.",
+  },
+  {
+    market: 2,
+    branch: "Void on a tie",
+    detail:
+      "One agent per side at equal weight. No majority, so the market voids: bonds returned, no fee, nothing recorded about who was right.",
+  },
+  {
+    market: 3,
+    branch: "Agent-decided settle",
+    detail:
+      "Three independent agent processes, 200/300 to YES. The dissenter is slashed and drops to 1.00\u00d7; the other two reach 3.00\u00d7.",
+  },
+  {
+    market: 4,
+    branch: "Challenge and dispute",
+    detail:
+      "Only the contrarian submits, so the tally lands on the wrong answer. A challenger posts 2\u00d7 the bond, the dispute resolver flips the outcome, the challenger recovers its bond plus the reward, and the resolver is slashed a second time.",
+  },
+];
+
 export const limitations = [
   {
     title: "Dispute resolution is centralised",

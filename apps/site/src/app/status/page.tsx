@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Card, Hash, Mono, Page, Section } from "@/components/ui";
-import { demoRun, deployment } from "@/lib/project";
+import { coverage, demoRun, deployment } from "@/lib/project";
 import report from "@/data/report.json";
 
 export const metadata: Metadata = {
@@ -198,6 +198,39 @@ make report    # all of the above, regenerates this page's data`}
             Not yet deployed.
           </div>
         )}
+      </Section>
+
+      {/* -------------------------------------------------------- coverage */}
+      <Section
+        eyebrow="Coverage"
+        title="Every branch, run on testnet"
+        lead="The unit suite covers these too. This is the same behaviour against the deployed contract, with real balances, real 8004 calls and real network latency."
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-edge">
+                {["Market", "Branch", "What it showed"].map((h) => (
+                  <th
+                    key={h}
+                    className="py-2.5 pr-4 font-mono text-[0.7rem] font-medium uppercase tracking-wider text-muted"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {coverage.map((c) => (
+                <tr key={c.market} className="border-b border-edge align-top">
+                  <td className="py-3 pr-4 font-mono text-xs">#{c.market}</td>
+                  <td className="py-3 pr-4 font-medium">{c.branch}</td>
+                  <td className="py-3 text-muted">{c.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Section>
 
       {/* -------------------------------------------------------- demo run */}
