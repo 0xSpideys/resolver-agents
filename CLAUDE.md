@@ -1,5 +1,25 @@
 # Verdict — agent working notes
 
+## Read this first
+
+**`docs/ISOLATION.md` is a hard constraint, not a guideline.** This project must
+stay unconnected to any other account, organisation or company. Nothing gets
+pushed, deployed or provisioned into an environment someone else owns, and no
+new hosted dependency gets added without first confirming whose account it lives
+under. Convenience is never a reason to reuse an existing account.
+
+Push over the `github-spideys` SSH alias. The machine's default key belongs to a
+different account and would attach this project to it silently.
+
+## Naming
+
+The product is **Verdict** — in the site, the docs, the code, everywhere.
+`resolver-agents` is only the repository name and must never appear as a product
+or project name in any content. The lowercase term "resolver agent" is protocol
+vocabulary for the role and is fine.
+
+## Then
+
 Read `docs/SPEC.md` before changing contract code. It is the source of truth; if
 the code and the spec disagree, fix one of them deliberately, don't drift.
 
