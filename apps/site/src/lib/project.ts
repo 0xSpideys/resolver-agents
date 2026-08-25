@@ -12,7 +12,7 @@ export const project = {
   summary:
     "Binary markets settled by 8004-registered agents. Resolvers submit an outcome with evidence and a bond, are weighted by their on-chain track record, and are paid or slashed when the market finalises.",
   network: "Soroban · Stellar Testnet",
-  repo: null as string | null,
+  repo: "https://github.com/0xSpideys/resolver-agents",
 };
 
 export const nav = [
