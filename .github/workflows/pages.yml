@@ -53,8 +53,14 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # enablement lets the workflow turn Pages on itself. Selecting "GitHub
+      # Actions" in the repository settings does not always create the Pages
+      # resource until a deployment has succeeded, which makes the first run
+      # fail here on a fresh repository.
       - uses: actions/configure-pages@v5
         id: pages
+        with:
+          enablement: true
 
       - name: Build static export
         env:
