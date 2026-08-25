@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { Agent } from "./agent.js";
-import { loadConfig } from "./config.js";
+import { Agent } from "./agent";
+import { loadConfig } from "./config";
 import { decodeEvidence, decodeQuestion, verifyEvidence, verifyQuestion } from "@verdict/sdk";
-import { sourceById } from "./sources/index.js";
+import { sourceById } from "./sources/index";
 
 const USAGE = `
 resolver-agent — an 8004-registered agent that resolves Verdict markets

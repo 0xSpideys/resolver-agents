@@ -1,4 +1,5 @@
 import {
+  Account,
   Address,
   BASE_FEE,
   Contract,
@@ -10,7 +11,7 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 
-import type { ChainConfig } from "./config.js";
+import type { ChainConfig } from "./config";
 
 /**
  * Thin wrapper over Soroban RPC: simulate for reads, simulate + sign + send +
@@ -22,17 +23,31 @@ import type { ChainConfig } from "./config.js";
  */
 export class Chain {
   readonly server: rpc.Server;
-  readonly keypair: Keypair;
+  private readonly keypair: Keypair | null;
 
   constructor(private cfg: ChainConfig) {
     this.server = new rpc.Server(cfg.rpcUrl, {
       allowHttp: cfg.rpcUrl.startsWith("http://"),
     });
-    this.keypair = Keypair.fromSecret(cfg.secretKey);
+    // A reader needs no key. Simulation still wants a source account, but it
+    // never checks the sequence or the signature, so a throwaway keypair is
+    // enough and beats forcing every read path to hold a secret.
+    this.keypair = cfg.secretKey ? Keypair.fromSecret(cfg.secretKey) : null;
+  }
+
+  get readOnly(): boolean {
+    return this.keypair === null;
   }
 
   get publicKey(): string {
-    return this.keypair.publicKey();
+    return this.keypair?.publicKey() ?? READ_ONLY_SOURCE;
+  }
+
+  private signer(): Keypair {
+    if (!this.keypair) {
+      throw new Error("This Chain is read-only; it has no key to sign with.");
+    }
+    return this.keypair;
   }
 
   /** Simulate a call and decode the result. No transaction is submitted. */
@@ -60,7 +75,7 @@ export class Chain {
   ): Promise<{ value: T; hash: string }> {
     const tx = await this.buildTx(contractId, method, args);
     const prepared = await this.server.prepareTransaction(tx);
-    prepared.sign(this.keypair);
+    prepared.sign(this.signer());
 
     const sent = await this.server.sendTransaction(prepared);
     if (sent.status === "ERROR") {
@@ -86,7 +101,11 @@ export class Chain {
   }
 
   private async buildTx(contractId: string, method: string, args: xdr.ScVal[]) {
-    const account = await this.server.getAccount(this.publicKey);
+    // Reads skip the account fetch entirely: simulation ignores the sequence,
+    // and a read-only source account does not exist on-chain to fetch anyway.
+    const account = this.keypair
+      ? await this.server.getAccount(this.publicKey)
+      : new Account(READ_ONLY_SOURCE, "0");
     return new TransactionBuilder(account, {
       fee: BASE_FEE,
       networkPassphrase: this.cfg.networkPassphrase,
@@ -96,6 +115,12 @@ export class Chain {
       .build();
   }
 }
+
+/**
+ * Placeholder source account for simulation-only calls. Never signs, never
+ * submits, and does not need to exist.
+ */
+const READ_ONLY_SOURCE = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
 /* ------------------------------------------------------------ ScVal helpers */
 

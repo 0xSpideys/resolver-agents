@@ -10,8 +10,8 @@ import {
   type QuestionDocument,
 } from "@verdict/sdk";
 
-import type { AgentConfig } from "./config.js";
-import { sourceById } from "./sources/index.js";
+import type { AgentConfig } from "./config";
+import { sourceById } from "./sources/index";
 
 export interface ResolveResult {
   marketId: string;

@@ -30,10 +30,10 @@ export interface ResolutionSource {
   resolve(ctx: SourceContext): Promise<Finding>;
 }
 
-import { ReflectorSource } from "./reflector.js";
-import { OpenMeteoSource } from "./open-meteo.js";
-import { ResearchSource } from "./research.js";
-import { ContrarianSource } from "./contrarian.js";
+import { ReflectorSource } from "./reflector";
+import { OpenMeteoSource } from "./open-meteo";
+import { ResearchSource } from "./research";
+import { ContrarianSource } from "./contrarian";
 
 export { ReflectorSource, OpenMeteoSource, ResearchSource, ContrarianSource };
 

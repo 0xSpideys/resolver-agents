@@ -7,8 +7,8 @@
  * anyone can later check whether the reasoning matches what happened.
  */
 
-import { canonicalJson, fromDataUri, sha256, toDataUri } from "./canonical.js";
-import { toHex, type SourceClass } from "./question.js";
+import { canonicalJson, fromDataUri, sha256, toDataUri } from "./canonical";
+import { toHex, type SourceClass } from "./question";
 
 export interface EvidenceDocument {
   schema: "verdict.evidence/1";

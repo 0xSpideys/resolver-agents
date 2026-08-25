@@ -1,120 +1,180 @@
-import Link from "next/link";
-import { nav, project } from "@/lib/project";
+import type { MarketState } from "@verdict/sdk";
 
-export function Header() {
-  return (
-    <header className="sticky top-0 z-10 border-b border-edge bg-background/85 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
-        <Link href="/" className="font-mono text-sm font-medium tracking-tight">
-          {project.name}
-        </Link>
-        <nav className="flex items-center gap-5">
-          {nav.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className="text-sm text-muted transition-colors hover:text-foreground"
-            >
-              {n.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </header>
-  );
+/** Money is stored with 7 decimals, like USDC on Stellar. */
+export function amount(v: bigint | number, decimals = 2): string {
+  return (Number(v) / 1e7).toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
 }
 
-export function Footer() {
-  return (
-    <footer className="mx-auto max-w-3xl border-t border-edge px-5 py-10 text-sm text-muted sm:px-8">
-      <p>
-        {project.name} — {project.tagline}.
-      </p>
-      <p className="mt-2 font-mono text-xs">
-        {project.repo ? (
-          <a className="text-accent underline underline-offset-4" href={project.repo}>
-            {project.repo}
-          </a>
-        ) : (
-          "Source repository is private."
-        )}
-      </p>
-    </footer>
-  );
+export function weight(w: number): string {
+  return `${(w / 100).toFixed(2)}×`;
 }
 
-export function Page({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-3xl px-5 sm:px-8">{children}</div>;
+export function shortHash(h: string, head = 6, tail = 4): string {
+  return h.length <= head + tail + 1 ? h : `${h.slice(0, head)}…${h.slice(-tail)}`;
 }
 
-export function Section({
-  id,
-  eyebrow,
-  title,
-  lead,
-  children,
-  first = false,
-}: {
-  id?: string;
-  eyebrow?: string;
-  title: string;
-  lead?: string;
-  children?: React.ReactNode;
-  first?: boolean;
-}) {
+export function relative(ts: bigint | number): string {
+  const delta = Number(ts) - Math.floor(Date.now() / 1000);
+  const abs = Math.abs(delta);
+  const [n, unit] =
+    abs < 90
+      ? [abs, "sec"]
+      : abs < 5400
+        ? [Math.round(abs / 60), "min"]
+        : abs < 172800
+          ? [Math.round(abs / 3600), "hr"]
+          : [Math.round(abs / 86400), "day"];
+  return delta >= 0 ? `in ${n} ${unit}` : `${n} ${unit} ago`;
+}
+
+/**
+ * The state marker.
+ *
+ * Deliberately not a pill or a badge. It is a ruled tag, set in the margin the
+ * way a file is stamped, so the eye reads it as an annotation on the record
+ * rather than a button.
+ */
+export function Stamp({ state }: { state: MarketState }) {
+  const tone: Record<MarketState, string> = {
+    Open: "text-affirm border-affirm/40",
+    Resolving: "text-mark border-mark/40",
+    Tallied: "text-mark border-mark/40",
+    Disputed: "text-deny border-deny/40",
+    Settled: "text-soft border-rule-strong",
+    Void: "text-faint border-rule",
+  };
+  const said: Record<MarketState, string> = {
+    Open: "open for positions",
+    Resolving: "awaiting agents",
+    Tallied: "open to challenge",
+    Disputed: "under dispute",
+    Settled: "settled",
+    Void: "void",
+  };
   return (
-    <section
-      id={id}
-      className={`scroll-mt-20 py-12 sm:py-16 ${first ? "" : "border-t border-edge"}`}
+    <span
+      className={`inline-block shrink-0 border px-1.5 py-0.5 font-data text-[0.62rem] uppercase tracking-[0.11em] ${tone[state]}`}
     >
-      {eyebrow ? (
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">
-          {eyebrow}
-        </p>
-      ) : null}
-      <h2 className="mt-2.5 text-2xl font-semibold tracking-tight sm:text-3xl">
-        {title}
-      </h2>
-      {lead ? (
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">{lead}</p>
-      ) : null}
-      {children ? <div className="mt-8">{children}</div> : null}
-    </section>
+      {said[state]}
+    </span>
   );
 }
 
-export function Card({
+/**
+ * How far an answer of this kind can be trusted, stated before anyone reads it.
+ *
+ * Every question declares one. Showing it next to the answer is the difference
+ * between "an agent said so" and "an agent said so, and here is what that is
+ * worth" — the second is the only honest claim this protocol can make.
+ */
+export const PROVENANCE: Record<string, { name: string; note: string }> = {
+  onchain: {
+    name: "On-chain",
+    note: "Re-derivable by anyone from chain state, today or in a year. A false claim is provable, not merely suspected.",
+  },
+  "public-api": {
+    name: "Public source",
+    note: "Anyone can re-run the request while the provider still serves it. Nothing on-chain attests to the value.",
+  },
+  research: {
+    name: "Judgement",
+    note: "Read and decided by an agent. Not reproducible. The bond, the challenge window and the record are what stand behind it.",
+  },
+};
+
+/** The short form. Used in lists and beside a submission. */
+export function Provenance({ kind }: { kind: string }) {
+  const c = PROVENANCE[kind];
+  return (
+    <span className="font-data text-[0.68rem] uppercase tracking-[0.1em] text-soft">
+      {c?.name ?? kind}
+    </span>
+  );
+}
+
+/** The long form. Used once per page, where there is room to explain. */
+export function ProvenanceNote({ kind }: { kind: string }) {
+  const c = PROVENANCE[kind];
+  if (!c) return null;
+  return (
+    <p className="max-w-2xl text-sm leading-relaxed text-soft">
+      <span className="font-data text-[0.68rem] uppercase tracking-[0.1em]">
+        {c.name}.
+      </span>{" "}
+      {c.note}
+    </p>
+  );
+}
+
+export function Field({
+  label,
   children,
   className = "",
 }: {
+  label: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={`rounded-lg border border-edge bg-surface p-5 sm:p-6 ${className}`}>
-      {children}
+    <div className={className}>
+      <div className="label">{label}</div>
+      <div className="mt-1 font-data text-sm">{children}</div>
     </div>
   );
 }
 
-export function Mono({ children }: { children: React.ReactNode }) {
+/**
+ * The margin layout: a narrow annotation column on the left, the body on the
+ * right, collapsing to stacked on small screens.
+ */
+export function Margin({
+  note,
+  children,
+}: {
+  note: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[0.82em]">
-      {children}
-    </code>
+    <div className="grid gap-x-8 gap-y-2 sm:grid-cols-[8.5rem_1fr]">
+      <div className="pt-0.5">{note}</div>
+      <div className="min-w-0">{children}</div>
+    </div>
   );
 }
 
-/** Long contract ids and hashes: never let them widen the page. */
-export function Hash({ value, label }: { value: string; label?: string }) {
+export function Section({
+  label,
+  title,
+  children,
+}: {
+  label: string;
+  title?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="overflow-hidden rounded-md border border-edge bg-surface-2 px-3 py-2">
-      {label ? (
-        <span className="block font-mono text-[0.7rem] uppercase tracking-wider text-muted">
-          {label}
-        </span>
-      ) : null}
-      <span className="mt-0.5 block truncate font-mono text-xs">{value}</span>
-    </div>
+    <section className="rule-t py-9">
+      <Margin
+        note={
+          <>
+            <div className="label">{label}</div>
+            {title ? (
+              <div className="mt-1 text-sm leading-snug text-soft">{title}</div>
+            ) : null}
+          </>
+        }
+      >
+        {children}
+      </Margin>
+    </section>
+  );
+}
+
+/** A YES/NO figure. Uses ink tones, not traffic lights. */
+export function Side({ side }: { side: "YES" | "NO" }) {
+  return (
+    <span className={side === "YES" ? "text-affirm" : "text-deny"}>{side}</span>
   );
 }

@@ -1,6 +1,6 @@
 import type { SourceClass } from "@verdict/sdk";
 
-import { sourceById, type Finding, type ResolutionSource, type SourceContext } from "./index.js";
+import { sourceById, type Finding, type ResolutionSource, type SourceContext } from "./index";
 
 /**
  * Deliberately wrong. Runs the question's real source, then reports the

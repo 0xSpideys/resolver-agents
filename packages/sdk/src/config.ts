@@ -6,6 +6,6 @@ export interface ChainConfig {
   verdict: string;
   /** 8004 Identity Registry. */
   identityRegistry: string;
-  /** Signing key. Read-only callers can pass any valid public-key-only signer. */
-  secretKey: string;
+  /** Signing key. Omit or leave empty for a read-only client. */
+  secretKey?: string;
 }

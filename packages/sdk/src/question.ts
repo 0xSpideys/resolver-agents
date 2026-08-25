@@ -11,7 +11,7 @@
  * does not hash to what the contract holds.
  */
 
-import { canonicalJson, sha256, toDataUri, fromDataUri } from "./canonical.js";
+import { canonicalJson, sha256, toDataUri, fromDataUri } from "./canonical";
 
 /**
  * How trustworthy a resolution can possibly be, independent of who resolves it.

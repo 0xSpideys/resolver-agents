@@ -16,7 +16,7 @@ import {
   verifyQuestion,
 } from "@verdict/sdk";
 
-import { PRESETS, presetById } from "./questions.js";
+import { PRESETS, presetById } from "./questions";
 
 const USAGE = `
 curator — open and operate Verdict markets

@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { SourceClass } from "@verdict/sdk";
 
-import type { Finding, ResolutionSource, SourceContext } from "./index.js";
+import type { Finding, ResolutionSource, SourceContext } from "./index";
 
 /**
  * Resolves by having Claude research the question with web search.

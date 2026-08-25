@@ -1,5 +1,5 @@
-import { Chain, sv } from "./chain.js";
-import type { ChainConfig } from "./config.js";
+import { Chain, sv } from "./chain";
+import type { ChainConfig } from "./config";
 
 /**
  * 8004 registration metadata, per the EIP-8004 registration-v1 shape the

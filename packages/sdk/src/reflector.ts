@@ -1,7 +1,7 @@
 import { xdr } from "@stellar/stellar-sdk";
 
-import type { Chain } from "./chain.js";
-import { sv } from "./chain.js";
+import type { Chain } from "./chain";
+import { sv } from "./chain";
 
 /**
  * Reflector — the one oracle actually deployed and serving on Stellar testnet.

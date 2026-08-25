@@ -1,61 +1,131 @@
 @import "tailwindcss";
 
+/*
+ * The interface is a case file.
+ *
+ * A market is a matter with a statement, a set of exhibits and a ruling, so the
+ * page is built like a document rather than a dashboard: ruled lines instead of
+ * stacked cards, a margin column carrying metadata, serif for anything written
+ * and monospace for anything measured. There is no sans-serif in the system at
+ * all, which is most of why it does not look like every other app.
+ */
+
 :root {
-  --background: #fbfbfa;
-  --surface: #ffffff;
-  --surface-2: #f4f4f2;
-  --foreground: #14140f;
-  --muted: #6b6b63;
-  --border: #e3e3de;
-  --accent: #7c3f00;
-  --accent-soft: #f0e5d8;
-  --done: #2f6b46;
-  --active: #8a5a00;
-  --todo: #8a8a80;
+  --paper: #f6f3ec;
+  --leaf: #fffdf8;
+  --sunk: #efebe1;
+  --ink: #191713;
+  --ink-soft: #6b6558;
+  --ink-faint: #97907f;
+  --rule: #ddd7c8;
+  --rule-strong: #c4bcaa;
+  --seal: #8a3324;
+  --affirm: #2f5d43;
+  --deny: #8a3324;
+  --mark: #9a6b16;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0e0e0c;
-    --surface: #161614;
-    --surface-2: #1e1e1b;
-    --foreground: #ecece6;
-    --muted: #9a9a91;
-    --border: #2b2b27;
-    --accent: #e0a35c;
-    --accent-soft: #2a2019;
-    --done: #6dbb8e;
-    --active: #e0a35c;
-    --todo: #6f6f67;
+    --paper: #131110;
+    --leaf: #1a1816;
+    --sunk: #201d1a;
+    --ink: #ece6da;
+    --ink-soft: #948c7c;
+    --ink-faint: #6d6659;
+    --rule: #2c2823;
+    --rule-strong: #423c33;
+    --seal: #d4694f;
+    --affirm: #74b48c;
+    --deny: #d4694f;
+    --mark: #cfa14e;
   }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-edge: var(--border);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --color-done: var(--done);
-  --color-active: var(--active);
-  --color-todo: var(--todo);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --color-paper: var(--paper);
+  --color-leaf: var(--leaf);
+  --color-sunk: var(--sunk);
+  --color-ink: var(--ink);
+  --color-soft: var(--ink-soft);
+  --color-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-seal: var(--seal);
+  --color-affirm: var(--affirm);
+  --color-deny: var(--deny);
+  --color-mark: var(--mark);
+  --font-text: var(--font-serif);
+  --font-data: var(--font-mono);
 }
 
 * {
-  border-color: var(--border);
+  border-color: var(--rule);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif), Georgia, serif;
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
 }
 
-.hairline {
-  border-top: 1px solid var(--border);
+/* Numbers must line up in columns; the serif's default figures do not. */
+.tnum,
+.font-data,
+[class*="font-data"] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/*
+ * The margin label. Small caps monospace, set against the left rule, the way a
+ * document annotates itself rather than titling every block.
+ */
+.label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* A hairline that reads as a ruled page, not a card border. */
+.rule-t {
+  border-top: 1px solid var(--rule);
+}
+
+/* Long ids and hashes never widen the page. */
+.hash {
+  font-family: var(--font-mono), monospace;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--seal) 22%, transparent);
+}
+
+a {
+  color: inherit;
+}
+
+/* The seal: a small letterpress-feeling marker used for the wordmark only. */
+.seal-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 1px solid var(--rule-strong);
+  color: var(--seal);
+  font-family: var(--font-serif), serif;
+  font-size: 0.95rem;
+  line-height: 1;
+  border-radius: 2px;
 }

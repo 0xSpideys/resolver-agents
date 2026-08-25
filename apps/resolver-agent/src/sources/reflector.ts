@@ -1,7 +1,7 @@
 import { Reflector, compare, comparatorText } from "@verdict/sdk";
 import type { SourceClass } from "@verdict/sdk";
 
-import type { Finding, ResolutionSource, SourceContext } from "./index.js";
+import type { Finding, ResolutionSource, SourceContext } from "./index";
 
 /**
  * Resolves from the Reflector oracle, on-chain.

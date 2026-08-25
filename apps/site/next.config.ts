@@ -14,6 +14,8 @@ import type { NextConfig } from "next";
 const basePath = process.env.BASE_PATH ?? "";
 
 const nextConfig: NextConfig = {
+  // The SDK ships TypeScript source rather than a build step.
+  transpilePackages: ["@verdict/sdk"],
   ...(process.env.STATIC_EXPORT === "1"
     ? {
         output: "export",
