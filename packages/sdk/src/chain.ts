@@ -10,7 +10,7 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 
-import type { AgentConfig } from "./config.js";
+import type { ChainConfig } from "./config.js";
 
 /**
  * Thin wrapper over Soroban RPC: simulate for reads, simulate + sign + send +
@@ -24,7 +24,7 @@ export class Chain {
   readonly server: rpc.Server;
   readonly keypair: Keypair;
 
-  constructor(private cfg: AgentConfig) {
+  constructor(private cfg: ChainConfig) {
     this.server = new rpc.Server(cfg.rpcUrl, {
       allowHttp: cfg.rpcUrl.startsWith("http://"),
     });

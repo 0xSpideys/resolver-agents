@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Agent } from "./agent.js";
 import { loadConfig } from "./config.js";
-import { decodeEvidence, verifyEvidence } from "./evidence.js";
+import { decodeEvidence, decodeQuestion, verifyEvidence, verifyQuestion } from "@verdict/sdk";
 import { sourceById } from "./sources/index.js";
 
 const USAGE = `
@@ -17,7 +17,8 @@ resolver-agent — an 8004-registered agent that resolves Verdict markets
 Environment:
   AGENT_SECRET_KEY   required, S... secret key
   AGENT_ID           8004 agent id (needed by everything except register)
-  RESOLUTION_SOURCE  stellar-ledger (default) | contrarian
+  RESOLUTION_SOURCE  reflector (default) | open-meteo | research | contrarian
+  ANTHROPIC_API_KEY  only needed by the research source
   VERDICT_CONTRACT   defaults to the current testnet deployment
   RPC_URL            defaults to soroban-testnet.stellar.org
   POLL_INTERVAL      seconds between polls in watch mode, default 15
@@ -57,7 +58,8 @@ async function main() {
       ]);
       console.log(`agent      #${agentId}`);
       console.log(`address    ${agent.address}`);
-      console.log(`source     ${sourceById(cfg.source).id}`);
+      const src = sourceById(cfg.source);
+      console.log(`source     ${src.id} (${src.sourceClass})`);
       console.log(`record     ${stats.correct} correct / ${stats.wrong} wrong`);
       console.log(`weight     ${(weight / 100).toFixed(2)}x`);
       console.log(`resolvable ${resolvable.length} market(s)`);

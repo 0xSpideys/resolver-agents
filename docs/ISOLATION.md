@@ -60,3 +60,13 @@ git log --all --format="%an <%ae> | %cn <%ce>" | sort -u
 
 Both should come back clean. If either does not, fix it before pushing — history
 rewrites are cheap while the repo is small and expensive once it is not.
+
+## Third-party credentials
+
+The research resolver calls the Anthropic API and needs a key. It is read from
+`ANTHROPIC_API_KEY` at runtime and must come from an account with no connection
+to any other identity — same rule as everything else here.
+
+The key never enters the repository, a config file, or a commit. If a future
+deployment needs it present somewhere, that somewhere is subject to this whole
+document, not an exception to it.

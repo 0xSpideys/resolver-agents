@@ -1,9 +1,17 @@
-import { Chain } from "./chain.js";
+import {
+  Chain,
+  Identity,
+  Verdict,
+  buildEvidence,
+  buildMetadata,
+  toHex,
+  verifyQuestion,
+  type Market,
+  type QuestionDocument,
+} from "@verdict/sdk";
+
 import type { AgentConfig } from "./config.js";
-import { buildEvidence } from "./evidence.js";
-import { Identity, buildMetadata } from "./registry.js";
 import { sourceById } from "./sources/index.js";
-import { Verdict, type Market } from "./verdict.js";
 
 export interface ResolveResult {
   marketId: string;
@@ -28,14 +36,13 @@ export class Agent {
     return this.chain.publicKey;
   }
 
-  /** Mint an 8004 identity for this keypair. */
-  async register(name: string, description: string) {
+  register(name: string, description: string) {
     return this.identity.register(buildMetadata(name, description));
   }
 
   /**
-   * Fail loudly at startup rather than at the first submission: the contract
-   * checks both of these, and a mismatch here is a configuration mistake that
+   * Fail at startup rather than at the first submission — both of these are
+   * checked by the contract, and a mismatch is a configuration mistake that
    * would otherwise surface as an opaque error mid-run.
    */
   async assertIdentity(agentId: number): Promise<void> {
@@ -50,25 +57,61 @@ export class Agent {
     }
   }
 
-  /** Observe, build evidence, submit. One market, one submission. */
+  /**
+   * Read the market's question and check it against the hash the contract
+   * holds.
+   *
+   * This is the gate. The hash is what makes "the criteria cannot change after
+   * people stake" true, and it only means anything if someone refuses to
+   * proceed when it fails. Staking a bond against a document that is not the
+   * one people bet on is worse than not resolving at all.
+   */
+  async loadQuestion(market: Market): Promise<QuestionDocument> {
+    const result = verifyQuestion(market.question_uri, market.question_hash);
+    if (!result.ok || !result.doc) {
+      throw new Error(`refusing to resolve — ${result.reason}`);
+    }
+    return result.doc;
+  }
+
   async resolveMarket(agentId: number, market: Market): Promise<ResolveResult> {
+    const question = await this.loadQuestion(market);
     const source = sourceById(this.cfg.source);
-    const finding = await source.resolve(market);
-    const evidence = buildEvidence(market, agentId, source.id, finding);
+
+    const finding = await source.resolve({
+      chain: this.chain,
+      question,
+      anthropicApiKey: this.cfg.anthropicApiKey,
+    });
+
+    const evidence = buildEvidence({
+      schema: "verdict.evidence/1",
+      market: market.id.toString(),
+      agent: agentId,
+      questionHash: toHex(market.question_hash),
+      outcome: finding.outcome,
+      source: source.id,
+      sourceClass: source.sourceClass,
+      reasoning: finding.reasoning,
+      observed: finding.observed,
+      sources: finding.sources,
+      observedAt: new Date().toISOString(),
+      ...(finding.caveat ? { caveat: finding.caveat } : {}),
+    });
 
     const { value: weight, hash } = await this.verdict.submitOutcome({
       agentId,
       marketId: market.id,
       outcome: finding.outcome,
       evidenceUri: evidence.uri,
-      evidenceHash: evidence.hash,
+      evidenceHash: Buffer.from(evidence.hash),
     });
 
     return {
       marketId: market.id.toString(),
       outcome: finding.outcome,
       weight,
-      evidenceHash: evidence.hash.toString("hex"),
+      evidenceHash: evidence.hashHex,
       tx: hash,
     };
   }
@@ -82,22 +125,21 @@ export class Agent {
       try {
         const r = await this.resolveMarket(agentId, m);
         log(
-          `  resolved market #${r.marketId} as ${r.outcome === 1 ? "YES" : "NO"} ` +
-            `at weight ${(r.weight / 100).toFixed(2)}x  tx ${r.tx}`,
+          `  market #${r.marketId} -> ${r.outcome === 1 ? "YES" : "NO"} ` +
+            `at ${(r.weight / 100).toFixed(2)}x   tx ${r.tx}`,
         );
         results.push(r);
       } catch (err) {
-        // One bad market must not stop the agent working on the others — a
-        // question this source cannot parse is a normal condition, not a crash.
-        log(`  skipped market #${m.id}: ${(err as Error).message}`);
+        // A question this source cannot answer, or one whose document does not
+        // verify, is a normal condition — skip it and keep working on the rest.
+        log(`  market #${m.id} skipped: ${(err as Error).message}`);
       }
     }
     return results;
   }
 
-  /** Poll forever. Stops on SIGINT. */
   async watch(agentId: number, log = console.log): Promise<void> {
-    log(`watching for resolvable markets every ${this.cfg.pollInterval}s — ctrl-c to stop`);
+    log(`watching every ${this.cfg.pollInterval}s — ctrl-c to stop`);
     let running = true;
     process.once("SIGINT", () => {
       log("\nstopping");

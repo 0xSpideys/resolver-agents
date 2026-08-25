@@ -3,16 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "bin": { "agent": "./dist/cli.js" },
+  "bin": {
+    "agent": "./dist/cli.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "register": "tsx src/cli.ts register",
     "watch": "tsx src/cli.ts watch",
-    "resolve": "tsx src/cli.ts resolve"
+    "resolve": "tsx src/cli.ts resolve",
+    "create-market": "tsx src/cli.ts create-market"
   },
   "dependencies": {
-    "@stellar/stellar-sdk": "^14.2.0"
+    "@anthropic-ai/sdk": "^0.120.0",
+    "@stellar/stellar-sdk": "^14.2.0",
+    "@verdict/sdk": "workspace:*",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22",

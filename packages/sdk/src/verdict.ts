@@ -1,5 +1,5 @@
 import { Chain, sv } from "./chain.js";
-import type { AgentConfig } from "./config.js";
+import type { ChainConfig } from "./config.js";
 
 export type MarketState =
   | "Open"
@@ -21,8 +21,10 @@ function decodeState(raw: unknown): MarketState {
 
 export interface Market {
   id: bigint;
+  creator: string;
   token: string;
   question_uri: string;
+  question_hash: Uint8Array;
   outcome_count: number;
   close_ts: bigint;
   resolve_deadline: bigint;
@@ -31,7 +33,25 @@ export interface Market {
   provisional_outcome: number;
   final_outcome: number;
   total_staked: bigint;
+  bond_pool: bigint;
+  distributable: bigint;
+  resolver_pool: bigint;
+  resolvers_settled: boolean;
+  fee_bps: number;
+  resolver_fee_bps: number;
   resolver_bond: bigint;
+}
+
+export interface Challenge {
+  challenger: string;
+  bond: bigint;
+  reason_uri: string;
+  raised_at: bigint;
+}
+
+export interface AgentStats {
+  correct: number;
+  wrong: number;
 }
 
 export interface Submission {
@@ -48,7 +68,7 @@ export interface Submission {
 export class Verdict {
   constructor(
     private chain: Chain,
-    private cfg: AgentConfig,
+    private cfg: ChainConfig,
   ) {}
 
   marketCount(): Promise<bigint> {
@@ -71,6 +91,94 @@ export class Verdict {
 
   getWeight(agentId: number): Promise<number> {
     return this.chain.read<number>(this.cfg.verdict, "get_weight", [sv.u32(agentId)]);
+  }
+
+  getSubmissions(id: bigint): Promise<Submission[]> {
+    return this.chain.read<Submission[]>(this.cfg.verdict, "get_submissions", [sv.u64(id)]);
+  }
+
+  getPools(id: bigint): Promise<bigint[]> {
+    return this.chain.read<bigint[]>(this.cfg.verdict, "get_pools", [sv.u64(id)]);
+  }
+
+  getPosition(id: bigint, user: string, outcome: number): Promise<bigint> {
+    return this.chain.read<bigint>(this.cfg.verdict, "get_position", [
+      sv.u64(id),
+      sv.address(user),
+      sv.u32(outcome),
+    ]);
+  }
+
+  getChallenge(id: bigint): Promise<Challenge | null> {
+    return this.chain.read<Challenge | null>(this.cfg.verdict, "get_challenge", [sv.u64(id)]);
+  }
+
+  quotePayout(id: bigint, outcome: number, stake: bigint): Promise<bigint> {
+    return this.chain.read<bigint>(this.cfg.verdict, "quote_payout", [
+      sv.u64(id),
+      sv.u32(outcome),
+      sv.i128(stake),
+    ]);
+  }
+
+  /** Curator only. `questionHash` must be the sha256 of the question document. */
+  createMarket(args: {
+    token: string;
+    questionUri: string;
+    questionHash: Uint8Array;
+    outcomeCount: number;
+    closeTs: number;
+  }) {
+    return this.chain.send<bigint>(this.cfg.verdict, "create_market", [
+      sv.address(args.token),
+      sv.string(args.questionUri),
+      sv.bytes32(args.questionHash),
+      sv.u32(args.outcomeCount),
+      sv.u64(args.closeTs),
+    ]);
+  }
+
+  bet(user: string, id: bigint, outcome: number, amount: bigint) {
+    return this.chain.send<bigint>(this.cfg.verdict, "bet", [
+      sv.address(user),
+      sv.u64(id),
+      sv.u32(outcome),
+      sv.i128(amount),
+    ]);
+  }
+
+  closeMarket(id: bigint) {
+    return this.chain.send<void>(this.cfg.verdict, "close_market", [sv.u64(id)]);
+  }
+
+  tally(id: bigint) {
+    return this.chain.send<unknown>(this.cfg.verdict, "tally", [sv.u64(id)]);
+  }
+
+  finalize(id: bigint) {
+    return this.chain.send<void>(this.cfg.verdict, "finalize", [sv.u64(id)]);
+  }
+
+  settleResolvers(id: bigint) {
+    return this.chain.send<void>(this.cfg.verdict, "settle_resolvers", [sv.u64(id)]);
+  }
+
+  claim(user: string, id: bigint) {
+    return this.chain.send<bigint>(this.cfg.verdict, "claim", [sv.address(user), sv.u64(id)]);
+  }
+
+  /** Every market, newest first. Fine at demo scale; an indexer replaces it. */
+  async listMarkets(): Promise<Market[]> {
+    const count = await this.marketCount();
+    const out: Market[] = [];
+    for (let i = count - 1n; i >= 0n; i--) {
+      try {
+        out.push(await this.getMarket(i));
+      } catch {
+        // Archived or unreadable entries are skipped rather than failing the list.
+      }
+    }
+    return out;
   }
 
   getStats(agentId: number): Promise<{ correct: number; wrong: number }> {

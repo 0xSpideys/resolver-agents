@@ -1,5 +1,5 @@
 import { Chain, sv } from "./chain.js";
-import type { AgentConfig } from "./config.js";
+import type { ChainConfig } from "./config.js";
 
 /**
  * 8004 registration metadata, per the EIP-8004 registration-v1 shape the
@@ -39,7 +39,7 @@ export function metadataUri(meta: AgentMetadata): string {
 export class Identity {
   constructor(
     private chain: Chain,
-    private cfg: AgentConfig,
+    private cfg: ChainConfig,
   ) {}
 
   exists(agentId: number): Promise<boolean> {
