@@ -72,6 +72,19 @@ export async function getExhibits(id: bigint): Promise<Exhibit[]> {
   });
 }
 
+/** What a given account holds on a market, both sides. */
+export async function getStake(
+  id: bigint,
+  user: string,
+): Promise<{ yes: bigint; no: bigint }> {
+  const { verdict } = readOnlyVerdict();
+  const [no, yes] = await Promise.all([
+    verdict.getPosition(id, user, 0),
+    verdict.getPosition(id, user, 1),
+  ]);
+  return { yes, no };
+}
+
 export interface AgentRecord {
   agentId: number;
   correct: number;

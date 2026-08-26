@@ -50,8 +50,17 @@ const STATE_COPY: Record<MarketState, { said: string; tone: string }> = {
   Void: { said: "Void", tone: "text-dim" },
 };
 
-export function Status({ state }: { state: MarketState }) {
-  const c = STATE_COPY[state];
+/**
+ * `expired` is not a contract state. A market whose clock has run out stays
+ * Open until somebody calls close_market, and showing it as plain "Open" makes
+ * the interface look stuck when it is in fact waiting for a nudge anyone can
+ * give.
+ */
+export function Status({ state, expired }: { state: MarketState; expired?: boolean }) {
+  const c =
+    expired && state === "Open"
+      ? { said: "Needs closing", tone: "text-brass" }
+      : STATE_COPY[state];
   return (
     <span className={`inline-flex items-center gap-1.5 text-[0.78rem] ${c.tone}`}>
       <span className="size-1.5 rounded-full bg-current" aria-hidden />

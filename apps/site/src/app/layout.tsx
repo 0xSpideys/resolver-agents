@@ -5,6 +5,7 @@ import "./globals.css";
 
 import { BuiltOnStellar, StellarMark } from "@/components/stellar";
 import { ThemeScript, ThemeToggle } from "@/components/theme";
+import { ConnectButton, WalletProvider } from "@/components/wallet";
 
 const serif = Instrument_Serif({
   variable: "--font-serif",
@@ -46,6 +47,7 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className={`${serif.variable} ${grotesque.variable} ${mono.variable}`}>
+        <WalletProvider>
         <div className="mx-auto flex min-h-dvh max-w-[70rem] flex-col px-5 sm:px-8">
           <header className="sticky top-0 z-20 -mx-5 flex items-center justify-between gap-6 border-b border-line bg-bg/85 px-5 py-3 backdrop-blur-md sm:-mx-8 sm:px-8">
             <div className="flex items-center gap-7">
@@ -67,7 +69,10 @@ export default function RootLayout({
                 ))}
               </nav>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <ConnectButton />
+              <ThemeToggle />
+            </div>
           </header>
 
           <main className="flex-1">{children}</main>
@@ -80,6 +85,7 @@ export default function RootLayout({
             </div>
           </footer>
         </div>
+        </WalletProvider>
       </body>
     </html>
   );

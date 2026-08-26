@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
-import { getCase, getExhibits, toHex, type Exhibit } from "@/lib/chain";
+import { getCase, getExhibits, getStake, toHex, type Exhibit } from "@/lib/chain";
 import { useAsync } from "@/hooks/useAsync";
+import { MarketActions } from "@/components/actions";
+import { useWallet } from "@/components/wallet";
+import { useNow } from "@/hooks/useNow";
 import {
   Odds,
   Provenance,
@@ -37,11 +40,20 @@ export default function MarketRoute() {
 
 function MarketPage() {
   const id = useSearchParams().get("id");
-  const query = useAsync(id ?? "", async () => {
+  const { address } = useWallet();
+  // Bumped after any write so the page re-reads rather than showing the state
+  // that existed before the transaction landed.
+  const [version, setVersion] = useState(0);
+
+  const query = useAsync(`${id}:${address ?? ""}:${version}`, async () => {
     if (id === null || !/^\d+$/.test(id)) throw new Error("No market id in the URL.");
     const key = BigInt(id);
-    const [c, exhibits] = await Promise.all([getCase(key), getExhibits(key)]);
-    return { c, exhibits };
+    const [c, exhibits, stake] = await Promise.all([
+      getCase(key),
+      getExhibits(key),
+      address ? getStake(key, address) : Promise.resolve(null),
+    ]);
+    return { c, exhibits, stake };
   });
 
   if (query.loading) {
@@ -68,7 +80,22 @@ function MarketPage() {
     );
   }
 
-  const { c, exhibits } = query.data;
+  return <MarketBody data={query.data} onDone={() => setVersion((v) => v + 1)} />;
+}
+
+function MarketBody({
+  data,
+  onDone,
+}: {
+  data: {
+    c: Awaited<ReturnType<typeof getCase>>;
+    exhibits: Exhibit[];
+    stake: { yes: bigint; no: bigint } | null;
+  };
+  onDone: () => void;
+}) {
+  const now = useNow();
+  const { c, exhibits, stake } = data;
   const { market: m, question, pools } = c;
   const total = pools.no + pools.yes;
   const yes = total > 0n ? Number((pools.yes * 1000n) / total) / 10 : null;
@@ -79,7 +106,10 @@ function MarketPage() {
       <header className="py-12 sm:py-16">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="tag">Market {String(m.id).padStart(3, "0")}</span>
-          <Status state={m.state} />
+          <Status
+            state={m.state}
+            expired={m.state === "Open" && now >= Number(m.close_ts)}
+          />
           {question ? <Provenance kind={question.sourceClass} /> : null}
         </div>
 
@@ -134,6 +164,8 @@ function MarketPage() {
             every bond went back. No fee taken, nothing recorded.
           </p>
         ) : null}
+
+        <MarketActions market={m} yourStake={stake} onDone={onDone} />
       </header>
 
       {question ? (

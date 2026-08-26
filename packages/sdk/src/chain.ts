@@ -14,6 +14,19 @@ import {
 import type { ChainConfig } from "./config";
 
 /**
+ * Anything that can sign a transaction envelope.
+ *
+ * A browser wallet never hands over a key, so signing has to be a call rather
+ * than a local operation. The agent and the curator still pass a secret and get
+ * the fast path; the dApp passes one of these.
+ */
+export interface ExternalSigner {
+  address: string;
+  /** Returns the signed envelope XDR. */
+  signXdr(xdr: string, networkPassphrase: string): Promise<string>;
+}
+
+/**
  * Thin wrapper over Soroban RPC: simulate for reads, simulate + sign + send +
  * poll for writes.
  *
@@ -24,30 +37,28 @@ import type { ChainConfig } from "./config";
 export class Chain {
   readonly server: rpc.Server;
   private readonly keypair: Keypair | null;
+  private readonly external: ExternalSigner | null;
 
-  constructor(private cfg: ChainConfig) {
+  constructor(
+    private cfg: ChainConfig,
+    external?: ExternalSigner | null,
+  ) {
     this.server = new rpc.Server(cfg.rpcUrl, {
       allowHttp: cfg.rpcUrl.startsWith("http://"),
     });
-    // A reader needs no key. Simulation still wants a source account, but it
-    // never checks the sequence or the signature, so a throwaway keypair is
-    // enough and beats forcing every read path to hold a secret.
+    // A reader needs neither. Simulation wants a source account but never
+    // checks the sequence or the signature, so reads work with no identity at
+    // all rather than forcing every read path to hold a secret.
     this.keypair = cfg.secretKey ? Keypair.fromSecret(cfg.secretKey) : null;
+    this.external = external ?? null;
   }
 
   get readOnly(): boolean {
-    return this.keypair === null;
+    return this.keypair === null && this.external === null;
   }
 
   get publicKey(): string {
-    return this.keypair?.publicKey() ?? READ_ONLY_SOURCE;
-  }
-
-  private signer(): Keypair {
-    if (!this.keypair) {
-      throw new Error("This Chain is read-only; it has no key to sign with.");
-    }
-    return this.keypair;
+    return this.keypair?.publicKey() ?? this.external?.address ?? READ_ONLY_SOURCE;
   }
 
   /** Simulate a call and decode the result. No transaction is submitted. */
@@ -75,9 +86,22 @@ export class Chain {
   ): Promise<{ value: T; hash: string }> {
     const tx = await this.buildTx(contractId, method, args);
     const prepared = await this.server.prepareTransaction(tx);
-    prepared.sign(this.signer());
 
-    const sent = await this.server.sendTransaction(prepared);
+    let signed;
+    if (this.keypair) {
+      prepared.sign(this.keypair);
+      signed = prepared;
+    } else if (this.external) {
+      const xdrOut = await this.external.signXdr(
+        prepared.toXDR(),
+        this.cfg.networkPassphrase,
+      );
+      signed = TransactionBuilder.fromXDR(xdrOut, this.cfg.networkPassphrase);
+    } else {
+      throw new Error("This Chain is read-only; it has nothing to sign with.");
+    }
+
+    const sent = await this.server.sendTransaction(signed);
     if (sent.status === "ERROR") {
       throw new Error(
         `${method} rejected: ${JSON.stringify(sent.errorResult?.result())}`,
@@ -103,9 +127,9 @@ export class Chain {
   private async buildTx(contractId: string, method: string, args: xdr.ScVal[]) {
     // Reads skip the account fetch entirely: simulation ignores the sequence,
     // and a read-only source account does not exist on-chain to fetch anyway.
-    const account = this.keypair
-      ? await this.server.getAccount(this.publicKey)
-      : new Account(READ_ONLY_SOURCE, "0");
+    const account = this.readOnly
+      ? new Account(READ_ONLY_SOURCE, "0")
+      : await this.server.getAccount(this.publicKey);
     return new TransactionBuilder(account, {
       fee: BASE_FEE,
       networkPassphrase: this.cfg.networkPassphrase,
