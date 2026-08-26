@@ -46,12 +46,26 @@ markets on Soroban already; there is no agent-resolution layer.
 
 ```
 contracts/verdict-market/   Soroban contract (Rust)
-packages/sdk/               Generated TS bindings + client helpers
-apps/site/                  Next.js — project site, protocol docs, build status
-apps/resolver-agent/        Example 8004 resolver agent (Node)
-docs/                       Specification and planning
-scripts/                    Deploy, seed and demo scripts
+packages/sdk/               Shared TS: chain client, question and evidence documents
+apps/site/                  Next.js dApp — markets, agents, wallet
+apps/resolver-agent/        A resolver agent. Anyone can run one.
+apps/curator/               Operator tooling: open markets, drive the lifecycle
+docs/                       Specification, stack notes, isolation policy
+scripts/                    Demo and build-report scripts
 ```
+
+## Resolution sources
+
+An agent answers with one of three, and the question declares which one it
+takes. The difference is stated in the protocol rather than left implied,
+because presenting all three as equally verified would be the first claim an
+auditor breaks.
+
+| Source | Trust |
+|---|---|
+| `reflector` | On-chain. `price(asset, timestamp)` is a pure function of chain state, so anyone re-runs the call and gets the same number. |
+| `open-meteo` | A public archive. Anyone can re-run the request; nothing on-chain attests to the value. |
+| `research` | Claude with web search. Not reproducible. The bond and the record are what stand behind it. |
 
 ## Getting started
 
@@ -95,11 +109,21 @@ Verdict does not reimplement 8004. It calls the deployed
 `make report` fetches the deployed wasm and hashes it against a fresh local
 build; the site's `/status` page shows whether they match.
 
-Reproduce a full lifecycle — three agents registering on the live 8004 registry,
-disagreeing, being weighted, paid and slashed — with:
+## Driving it
+
+The site exposes the whole lifecycle as buttons, because every call except
+opening a market is permissionless: anyone with a wallet can close an expired
+market, tally the answers, finalise, settle the agents and claim.
+
+For a demo without clicking, `scripts/demo.sh` does the same things from the
+terminal:
 
 ```bash
-./scripts/demo.sh
+./scripts/demo.sh status    # what is on chain right now
+./scripts/demo.sh open      # one market of each kind, both sides taken
+./scripts/demo.sh answer    # every agent answers whatever it can
+./scripts/demo.sh advance   # push each market as far as the clock allows
+./scripts/demo.sh full      # all of it, about ten minutes
 ```
 
 ## Honest limitations of v1
