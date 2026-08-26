@@ -11,8 +11,8 @@ export const TESTNET = {
   horizonUrl: "https://horizon-testnet.stellar.org",
 
   verdict: "CD75VOBNOPZQJ2ZLV5CE2JTIQFE6BFBJK2KNLA26JPXEH223L3RSLHO5",
-  /** Demo settlement token: a classic asset exposed through its SAC. */
-  token: "CBEJPXHJ3G3YENGGTNEYC6WAQFM6Q5JKRUIKV4AJ25KBWOQ7J6CVLPHU",
+  /** Demo settlement token: native XLM's SAC. No trustline needed. */
+  token: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
 
   /** 8004, deployed by trionlabs. */
   identityRegistry: "CDE3K4COIAGWNNJQQLL26SYI3KBJF5FUDHXG5FA6GYDJCG7T5V7FIWZH",

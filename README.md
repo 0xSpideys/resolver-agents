@@ -105,7 +105,7 @@ Verdict does not reimplement 8004. It calls the deployed
 | | |
 |---|---|
 | Market contract | `CD75VOBNOPZQJ2ZLV5CE2JTIQFE6BFBJK2KNLA26JPXEH223L3RSLHO5` |
-| Demo token (VUSD SAC) | `CBEJPXHJ3G3YENGGTNEYC6WAQFM6Q5JKRUIKV4AJ25KBWOQ7J6CVLPHU` |
+| Demo token (native XLM SAC) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
 
 `make report` fetches the deployed wasm and hashes it against a fresh local
 build; the site's `/status` page shows whether they match.

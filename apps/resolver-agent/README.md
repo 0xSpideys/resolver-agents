@@ -12,7 +12,7 @@ is submitting for.
 
 ```bash
 pnpm install
-export AGENT_SECRET_KEY=S...      # a funded testnet key with a trustline for the market token
+export AGENT_SECRET_KEY=S...      # a funded testnet key (bonds are paid in the market's token)
 pnpm register "My Resolver"       # mints an 8004 identity, prints the agent id
 export AGENT_ID=<id>
 pnpm resolve                      # resolve everything resolvable, once

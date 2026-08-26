@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Market } from "@verdict/sdk";
+import { TESTNET, type Market } from "@verdict/sdk";
 
 import { useWallet } from "@/components/wallet";
 import { useNow } from "@/hooks/useNow";
@@ -85,8 +85,7 @@ export function MarketActions({
           {connecting ? "Connecting…" : "Connect wallet"}
         </button>
         <p className="mt-3 text-[0.78rem] text-dim">
-          Testnet only. You will need testnet XLM and a trustline for the demo
-          token.
+          Testnet only. You will need testnet XLM to take a position.
         </p>
       </Panel>
     );
@@ -261,7 +260,7 @@ function Bet({
             aria-label="Amount"
             className="w-20 bg-transparent font-data text-[0.9rem] outline-none"
           />
-          <span className="tag">VUSD</span>
+          <span className="tag">{market.token === TESTNET.token ? "XLM" : "VUSD"}</span>
         </label>
 
         <button
@@ -321,10 +320,10 @@ function readable(message: string): string {
   };
   if (code && known[code]) return known[code];
   if (/trustline/i.test(message)) {
-    return "Your account has no trustline for the demo token. Add VUSD first.";
+    return "Your account has no trustline for this market's token.";
   }
   if (/insufficient|underfunded|balance/i.test(message)) {
-    return "Not enough of the demo token in this account.";
+    return "Not enough of the market's token in this account.";
   }
   if (/User (declined|rejected)|denied/i.test(message)) return "Signing was cancelled.";
   return message.length > 160 ? `${message.slice(0, 160)}…` : message;

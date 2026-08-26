@@ -33,7 +33,7 @@ curator — open and operate Verdict markets
 Environment:
   CURATOR_SECRET_KEY   required — must be the configured curator for "open"
   VERDICT_CONTRACT     defaults to the current testnet deployment
-  MARKET_TOKEN         defaults to the demo VUSD SAC
+  MARKET_TOKEN         defaults to the native XLM SAC
 `.trim();
 
 function chainFor(secret: string) {

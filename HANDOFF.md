@@ -106,7 +106,7 @@ github.com/0xSpideys/resolver-agents   remote (public), 7 commits unpushed
 | | |
 |---|---|
 | Verdict market | `CD75VOBNOPZQJ2ZLV5CE2JTIQFE6BFBJK2KNLA26JPXEH223L3RSLHO5` |
-| Demo token (VUSD SAC) | `CBEJPXHJ3G3YENGGTNEYC6WAQFM6Q5JKRUIKV4AJ25KBWOQ7J6CVLPHU` |
+| Demo token (native XLM SAC) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
 | 8004 Identity | `CDE3K4COIAGWNNJQQLL26SYI3KBJF5FUDHXG5FA6GYDJCG7T5V7FIWZH` |
 | 8004 Reputation | `CBZEAGIEI3HXMDRLF44KLQJQQOH6LCYWWSGJVSYQYQO2HQ6DDGZ7HT55` |
 | Reflector (CEX/DEX prices) | `CCYOZJCOPG34LLQQ7N24YXBM7LL62R7ONMZ3G6WZAAYPB5OYKOMJRN63` |
@@ -127,7 +127,7 @@ a record earned here means something elsewhere.
 
 ```
 resolve_window     300s     challenge_window   120s
-resolver_bond      10 VUSD  challenge_bond     2x
+resolver_bond      10 units of the market's token  challenge_bond     2x
 fee_bps            200      resolver_fee_bps   6000
 weight_min/max     100/300
 ```
@@ -261,20 +261,17 @@ clock, so the control to close a market appears the moment it expires.
 
 ### Blocking the demo
 
-**1. Trustline. This is the real blocker.** The demo token is a classic Stellar
-asset, so anyone connecting a wallet must open a VUSD trustline and obtain
-tokens before they can bet. There is no way to do that from the site. A visitor
-connects, clicks Place, and gets "no trustline."
-
-Two fixes:
-- **Add a "get test tokens" flow** — open the trustline and send tokens, signed
-  by the deployer. ~30 min. Keeps existing markets and reputation.
-- Replace the token with a pure Soroban token (no trustline needed). Cleaner but
-  needs a new token and new markets.
-
-The user leaned toward neither yet. Recommend the first: faster, preserves the
-agent records, and trustlines are what real USDC needs anyway, so showing one is
-honest.
+**1. Trustline — fixed.** The demo token was a classic Stellar asset (VUSD),
+which needed a trustline before anyone could bet, and the site had no flow to
+open one. Fixed by switching the demo settlement token to native XLM's SAC
+(`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` on testnet, derived
+via `stellar contract id asset --asset native --network testnet`). Native XLM
+needs no trustline, so a freshly funded testnet account can bet immediately.
+`Market.token` is snapshotted per market at creation (CLAUDE.md invariant #3),
+so this only affects markets opened after the switch — existing VUSD markets
+keep working exactly as before, and the site labels each market's token
+correctly (`market.token === TESTNET.token ? "XLM" : "VUSD"` in
+`apps/site/src/components/actions.tsx`).
 
 **2. Not pushed.** 7 commits sit local. `origin/main` has no conflict. Pushing
 triggers the GitHub Pages workflow (`.github/workflows/pages.yml`) and produces
@@ -403,7 +400,8 @@ changes — the site renders the committed file, and Pages has no Rust toolchain
 
 1. **Ask about pushing.** 7 commits and a working Pages workflow are sitting
    idle. A public URL is the difference between a demo and a description.
-2. **Trustline flow.** Without it the wallet button is a shop window. ~30 min.
+2. **Open a fresh demo market on the native XLM token** to exercise the new,
+   trustline-free path end to end.
 3. **Research agent**, the moment the API key arrives. Then open a market of all
    three kinds and let the sources disagree — that is the strongest single
    moment the demo has.
