@@ -1,5 +1,12 @@
 # Verdict — agent working notes
 
+## Start here
+
+**New to this project? Read [`HANDOFF.md`](HANDOFF.md) first, all of it.** It
+covers what Verdict is, everything built so far, what is deliberately not built,
+the traps that already cost time, and how to run every part. This file is the
+short version of its rules.
+
 ## Read this first
 
 **`docs/ISOLATION.md` is a hard constraint, not a guideline.** This project must

@@ -36,6 +36,7 @@ markets on Soroban already; there is no agent-resolution layer.
 
 | | |
 |---|---|
+| [`HANDOFF.md`](HANDOFF.md) | Full project handoff: what exists, what does not, and every trap found so far |
 | [`docs/SPEC.md`](docs/SPEC.md) | Full technical specification — economics, state machine, storage, entrypoints, test plan |
 | [`docs/STACK.md`](docs/STACK.md) | Tech stack, verified tool versions, tooling gotchas |
 | [`docs/V2_ROADMAP.md`](docs/V2_ROADMAP.md) | The twelve extension points built into v1, and where the next version goes |
