@@ -1,143 +1,230 @@
 @import "tailwindcss";
 
 /*
- * Paper, not a terminal.
+ * Design language: instrument.
  *
- * The palette is warm and light by default. Dark mode is a dim room rather than
- * a void: still paper, just under less light. Pure black reads as a console and
- * fights the serif.
+ * The subject is measurement — a probability, a weight, a bond, a record. So
+ * the page is built like a precision readout: cool neutral ground, one figure
+ * carrying the most visual weight on any screen, and colour used only where it
+ * means something. Pine reads YES, terracotta reads NO, brass marks standing.
+ * Nothing else is coloured, which is what makes those three legible at a glance.
  *
- * Serif for anything written, monospace for anything measured, no sans-serif at
- * all. Separation is by ruled line, not by stacking cards.
+ * Type carries the character instead of decoration: a high-contrast serif for
+ * display, a grotesque for everything read, a mono for everything counted.
  */
 
 :root {
-  --paper: #faf8f2;
-  --leaf: #ffffff;
-  --sunk: #f1ede3;
-  --ink: #211e19;
-  --ink-soft: #5d574b;
-  --ink-faint: #8d8677;
-  --rule: #e4dece;
-  --rule-strong: #cdc5b1;
-  --seal: #9c4221;
-  --affirm: #2f6146;
-  --deny: #9c4221;
-  --mark: #8a6414;
+  --bg: #fbfbfc;
+  --panel: #ffffff;
+  --sunk: #f2f2f5;
+  --line: #e6e6ec;
+  --line-firm: #d2d2dc;
+  --fg: #131319;
+  --fg-mid: #63636f;
+  --fg-dim: #9494a2;
+
+  --yes: #0e7357;
+  --yes-wash: #0e73571a;
+  --no: #a8442a;
+  --no-wash: #a8442a1a;
+  --brass: #9a7220;
+
+  --shadow: 0 1px 2px #13131908, 0 8px 24px #1313190a;
 }
 
+/* System preference, unless a choice has been pinned. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #262320;
-    --leaf: #2e2b26;
-    --sunk: #34302a;
-    --ink: #f0ebe0;
-    --ink-soft: #b3aa99;
-    --ink-faint: #8a8271;
-    --rule: #423d35;
-    --rule-strong: #5a5348;
-    --seal: #e08a63;
-    --affirm: #86c39c;
-    --deny: #e08a63;
-    --mark: #d7ad63;
+  :root:not([data-theme="light"]) {
+    --bg: #101116;
+    --panel: #17181e;
+    --sunk: #1e2027;
+    --line: #26282f;
+    --line-firm: #383b45;
+    --fg: #ecedf1;
+    --fg-mid: #9a9baa;
+    --fg-dim: #6b6d7c;
+
+    --yes: #4cbf9c;
+    --yes-wash: #4cbf9c1f;
+    --no: #e08055;
+    --no-wash: #e080551f;
+    --brass: #d3ab5c;
+
+    --shadow: 0 1px 2px #00000040, 0 8px 24px #00000030;
   }
 }
 
+/* An explicit choice wins in both directions. */
+:root[data-theme="dark"] {
+  --bg: #101116;
+  --panel: #17181e;
+  --sunk: #1e2027;
+  --line: #26282f;
+  --line-firm: #383b45;
+  --fg: #ecedf1;
+  --fg-mid: #9a9baa;
+  --fg-dim: #6b6d7c;
+
+  --yes: #4cbf9c;
+  --yes-wash: #4cbf9c1f;
+  --no: #e08055;
+  --no-wash: #e080551f;
+  --brass: #d3ab5c;
+
+  --shadow: 0 1px 2px #00000040, 0 8px 24px #00000030;
+}
+
 @theme inline {
-  --color-paper: var(--paper);
-  --color-leaf: var(--leaf);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
   --color-sunk: var(--sunk);
-  --color-ink: var(--ink);
-  --color-soft: var(--ink-soft);
-  --color-faint: var(--ink-faint);
-  --color-rule: var(--rule);
-  --color-rule-strong: var(--rule-strong);
-  --color-seal: var(--seal);
-  --color-affirm: var(--affirm);
-  --color-deny: var(--deny);
-  --color-mark: var(--mark);
-  --font-text: var(--font-serif);
+  --color-line: var(--line);
+  --color-line-firm: var(--line-firm);
+  --color-fg: var(--fg);
+  --color-mid: var(--fg-mid);
+  --color-dim: var(--fg-dim);
+  --color-yes: var(--yes);
+  --color-no: var(--no);
+  --color-brass: var(--brass);
+  --font-display: var(--font-serif);
+  --font-sans: var(--font-grotesque);
   --font-data: var(--font-mono);
 }
 
 * {
-  border-color: var(--rule);
+  border-color: var(--line);
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"],
+:root:not([data-theme="light"]) {
+  color-scheme: light dark;
 }
 
 body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-serif), Georgia, serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-grotesque), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  font-variant-numeric: tabular-nums;
+  font-synthesis-weight: none;
 }
 
-/* Figures have to line up in columns; the serif's default ones do not. */
+/* Figures line up in columns or the whole readout stops being scannable. */
+.tabular,
 .font-data,
 [class*="font-data"] {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
 
-/* The margin annotation: small monospace caps, set against the rule. */
-.label {
+/* The one small-caps label style, for anything annotating rather than saying. */
+.tag {
   font-family: var(--font-mono), monospace;
-  font-size: 0.6875rem;
-  letter-spacing: 0.09em;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--fg-dim);
 }
 
-.rule-t {
-  border-top: 1px solid var(--rule);
-}
-
-/* Long ids and hashes never widen the page. */
 .hash {
   font-family: var(--font-mono), monospace;
   overflow-wrap: anywhere;
   word-break: break-all;
 }
 
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.raised {
+  box-shadow: var(--shadow);
+}
+
 ::selection {
-  background: color-mix(in srgb, var(--seal) 20%, transparent);
+  background: color-mix(in srgb, var(--brass) 26%, transparent);
 }
 
 a {
   color: inherit;
 }
 
-/* The one button style. Bordered, not filled: this is a document, not a form. */
-.action {
+/* --------------------------------------------------------------- controls */
+
+.btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  border: 1px solid var(--rule-strong);
-  padding: 0.5rem 0.95rem;
-  font-family: var(--font-mono), monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  border-radius: 2px;
-  transition: background-color 120ms ease, border-color 120ms ease;
+  height: 2.35rem;
+  padding: 0 1rem;
+  border: 1px solid var(--line-firm);
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  background: var(--panel);
+  transition:
+    background-color 130ms ease,
+    border-color 130ms ease,
+    transform 130ms ease;
 }
 
-.action:hover {
+.btn:hover {
   background: var(--sunk);
-  border-color: var(--ink-faint);
+  border-color: var(--fg-dim);
 }
 
-.action-primary {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--paper);
+.btn:active {
+  transform: translateY(0.5px);
 }
 
-.action-primary:hover {
-  background: var(--ink);
-  border-color: var(--ink);
-  opacity: 0.88;
+.btn-solid {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+.btn-solid:hover {
+  background: var(--fg);
+  border-color: var(--fg);
+  opacity: 0.86;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* ------------------------------------------------------------- probability */
+
+/*
+ * The market's implied odds, drawn as the thing itself rather than a chart of
+ * it: one bar, split at the price, YES on the left.
+ */
+.odds {
+  position: relative;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--no-wash);
+  overflow: hidden;
+}
+
+.odds > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  background: var(--yes);
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .odds > i {
+    transition: width 400ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
 }

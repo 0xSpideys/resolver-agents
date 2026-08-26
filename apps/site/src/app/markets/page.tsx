@@ -7,33 +7,29 @@ import { Suspense } from "react";
 import { getCase, getExhibits, toHex, type Exhibit } from "@/lib/chain";
 import { useAsync } from "@/hooks/useAsync";
 import {
-  Field,
+  Odds,
   Provenance,
   ProvenanceNote,
   Section,
   Side,
-  Stamp,
+  Stat,
+  Status,
   amount,
   relative,
   weight,
 } from "@/components/ui";
 
-/** The margin note is just the class name; the explanation goes in the body. */
-function PROVENANCE_LABEL(kind: string) {
-  return <Provenance kind={kind} />;
-}
-
 /**
  * One page serves every market, reading the id from the query string.
  *
- * A `/markets/[id]` route would need every id enumerated at build time, and any
- * market opened afterwards would 404 until the next deploy. Since the data is
- * fetched in the browser anyway, one shell that works for any id — including
- * ones that do not exist yet — is both simpler and more correct.
+ * A `/markets/[id]` route would need every id enumerated at build time, and a
+ * market opened afterwards would 404 until the next deploy. The data is fetched
+ * in the browser regardless, so one shell that works for any id is both simpler
+ * and more correct.
  */
 export default function MarketRoute() {
   return (
-    <Suspense fallback={<div className="py-16" />}>
+    <Suspense fallback={<div className="py-20" />}>
       <MarketPage />
     </Suspense>
   );
@@ -50,21 +46,22 @@ function MarketPage() {
 
   if (query.loading) {
     return (
-      <div className="py-16">
-        <p className="label">Reading market {id}</p>
+      <div className="py-20">
+        <div className="h-5 w-40 animate-pulse rounded bg-sunk" />
+        <div className="mt-5 h-11 w-full max-w-2xl animate-pulse rounded bg-sunk" />
+        <div className="mt-8 h-32 w-full max-w-3xl animate-pulse rounded-xl bg-sunk" />
       </div>
     );
   }
 
   if (query.error || !query.data) {
     return (
-      <div className="py-16">
-        <p className="label">Not found</p>
-        <p className="mt-3 max-w-lg leading-relaxed text-soft">
+      <div className="py-20">
+        <h1 className="font-display text-[2rem] tracking-tight">Not found</h1>
+        <p className="mt-3 max-w-md text-mid">
           No market with that id could be read from the contract.
         </p>
-        <p className="hash mt-3 text-xs text-faint">{query.error}</p>
-        <Link href="/" className="mt-6 inline-block font-data text-sm text-soft underline decoration-rule-strong underline-offset-4">
+        <Link href="/" className="btn mt-6">
           All markets
         </Link>
       </div>
@@ -74,32 +71,65 @@ function MarketPage() {
   const { c, exhibits } = query.data;
   const { market: m, question, pools } = c;
   const total = pools.no + pools.yes;
-  const impliedYes = total > 0n ? Number((pools.yes * 1000n) / total) / 10 : null;
+  const yes = total > 0n ? Number((pools.yes * 1000n) / total) / 10 : null;
   const settled = m.state === "Settled";
 
   return (
     <article>
       <header className="py-12 sm:py-16">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-          <span className="font-data text-[0.72rem] text-faint">
-            MARKET {String(m.id).padStart(3, "0")}
-          </span>
-          <Stamp state={m.state} />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="tag">Market {String(m.id).padStart(3, "0")}</span>
+          <Status state={m.state} />
+          {question ? <Provenance kind={question.sourceClass} /> : null}
         </div>
 
-        <h1 className="mt-4 max-w-3xl text-[1.8rem] font-light leading-[1.2] tracking-tight sm:text-[2.3rem]">
-          {question?.title ?? "Question document does not match its hash"}
+        <h1 className="mt-4 max-w-3xl font-display text-[2rem] leading-[1.1] tracking-tight sm:text-[2.7rem]">
+          {question?.title ?? "Question does not match its hash"}
         </h1>
 
-        {settled ? (
-          <p className="mt-5 flex items-baseline gap-2.5 text-lg">
-            <span className="label">Ruling</span>
-            <Side side={m.final_outcome === 1 ? "YES" : "NO"} />
-          </p>
-        ) : null}
+        {/* The readout: the price, the two sides, and the size, in one object. */}
+        <div className="panel raised mt-8 max-w-3xl overflow-hidden">
+          <div className="grid gap-px bg-line sm:grid-cols-[1fr_14rem]">
+            <div className="bg-panel p-5">
+              <div className="flex items-end justify-between gap-6">
+                <div>
+                  <div className="tag">{settled ? "Ruling" : "Implied yes"}</div>
+                  <div className="mt-1 font-data text-[2.4rem] leading-none">
+                    {settled ? (
+                      <span className={m.final_outcome === 1 ? "text-yes" : "text-no"}>
+                        {m.final_outcome === 1 ? "YES" : "NO"}
+                      </span>
+                    ) : yes === null ? (
+                      "—"
+                    ) : (
+                      `${yes.toFixed(0)}%`
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-6 pb-1">
+                  <Stat label="Yes" align="right">
+                    <span className="text-yes">{amount(pools.yes, 0)}</span>
+                  </Stat>
+                  <Stat label="No" align="right">
+                    <span className="text-no">{amount(pools.no, 0)}</span>
+                  </Stat>
+                </div>
+              </div>
+              <div className="mt-4">
+                <Odds yes={yes} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-x-6 gap-y-4 bg-panel p-5 sm:grid-cols-1">
+              <Stat label="Pool">{amount(total)}</Stat>
+              <Stat label="Bond">{amount(m.resolver_bond, 0)}</Stat>
+              {settled ? <Stat label="To winners">{amount(m.distributable)}</Stat> : null}
+            </div>
+          </div>
+        </div>
 
         {m.state === "Void" ? (
-          <p className="mt-4 max-w-lg leading-relaxed text-soft">
+          <p className="mt-5 max-w-lg text-[0.95rem] leading-relaxed text-mid">
             No outcome could be established. Every stake is refundable in full and
             every bond went back. No fee taken, nothing recorded.
           </p>
@@ -107,71 +137,42 @@ function MarketPage() {
       </header>
 
       {question ? (
-        <Section label="Criteria" title={PROVENANCE_LABEL(question.sourceClass)}>
-          <p className="max-w-2xl text-[1.02rem] leading-relaxed">{question.criteria}</p>
+        <Section label="Criteria" note="Fixed when the market opened">
+          <div className="max-w-2xl">
+            <p className="text-[1rem] leading-relaxed">{question.criteria}</p>
 
-          <div className="mt-5 border-l-2 border-rule-strong pl-4">
-            <ProvenanceNote kind={question.sourceClass} />
-          </div>
+            <div className="mt-5 rounded-lg border border-line bg-sunk p-4">
+              <ProvenanceNote kind={question.sourceClass} />
+            </div>
 
-          <div className="mt-5 flex flex-wrap gap-x-10 gap-y-3">
-            <Field label="Question hash">
-              <span className="hash text-xs text-soft">{toHex(m.question_hash)}</span>
-            </Field>
-            <Field label="Checked">
-              <span className="text-affirm">matches the chain</span>
-            </Field>
+            <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="tag">Hash</span>
+              <span className="hash text-xs text-mid">{toHex(m.question_hash)}</span>
+              <span className="text-[0.78rem] text-yes">verified in your browser</span>
+            </div>
           </div>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-faint">
-            Hashed when the market opened, and re-checked in your browser just now.
-            The question cannot be restated once positions are on it.
-          </p>
         </Section>
       ) : (
         <Section label="Criteria">
-          <p className="max-w-xl text-[1.02rem] leading-relaxed text-deny">
-            The question does not match the hash on-chain, so there is no
-            trustworthy statement of what this market asks.
+          <p className="max-w-xl text-[1rem] leading-relaxed text-no">
+            The question does not match the hash on-chain, so there is no trustworthy
+            statement of what this market asks.
           </p>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-faint">
+          <p className="mt-2 max-w-xl text-[0.88rem] text-dim">
             An early market, opened before hashing was enforced. Left visible rather
             than hidden.
           </p>
         </Section>
       )}
 
-      <Section
-        label="Positions"
-        title="The winning side splits what the other side staked."
-      >
-        <div className="grid gap-px overflow-hidden border border-rule bg-rule sm:grid-cols-2">
-          <Pool side="YES" value={pools.yes} share={impliedYes} won={settled && m.final_outcome === 1} />
-          <Pool
-            side="NO"
-            value={pools.no}
-            share={impliedYes === null ? null : 100 - impliedYes}
-            won={settled && m.final_outcome === 0}
-          />
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-x-10 gap-y-3">
-          <Field label="Total staked">{amount(total)}</Field>
-          <Field label="Fee">{(m.fee_bps / 100).toFixed(2)}% of the losing side</Field>
-          <Field label="Resolver bond">{amount(m.resolver_bond)}</Field>
-          {settled ? <Field label="To winners">{amount(m.distributable)}</Field> : null}
-          {settled ? <Field label="To resolvers">{amount(m.resolver_pool)}</Field> : null}
-        </div>
-      </Section>
-
-      <Section label="Exhibits" title="What each agent found, and what it staked on it.">
+      <Section label="Answers" note={`${exhibits.length} submitted`}>
         {exhibits.length === 0 ? (
-          <p className="text-sm italic text-faint">No agent has submitted yet.</p>
+          <p className="text-[0.88rem] text-dim">No agent has answered yet.</p>
         ) : (
-          <ol>
-            {exhibits.map((x, i) => (
-              <ExhibitRow
+          <ol className="space-y-2.5">
+            {exhibits.map((x) => (
+              <ExhibitCard
                 key={x.submission.agent_id}
-                index={i + 1}
                 x={x}
                 finalOutcome={settled ? m.final_outcome : null}
               />
@@ -180,136 +181,81 @@ function MarketPage() {
         )}
       </Section>
 
-      <Section label="Timing" title="Enforced by the contract.">
-        <dl className="grid gap-x-10 gap-y-1 sm:grid-cols-2">
+      <Section label="Timing" note="Enforced by the contract">
+        <dl className="grid max-w-2xl gap-x-10 gap-y-3 sm:grid-cols-2">
           <Entry term="Trading closed" value={relative(m.close_ts)} />
-          <Entry term="Agents had until" value={relative(m.resolve_deadline)} />
+          <Entry term="Answers due" value={relative(m.resolve_deadline)} />
           {m.challenge_deadline > 0n ? (
-            <Entry term="Challenge window ended" value={relative(m.challenge_deadline)} />
+            <Entry term="Challenge ended" value={relative(m.challenge_deadline)} />
           ) : null}
           <Entry
-            term="Resolvers settled"
+            term="Agents settled"
             value={m.resolvers_settled ? "paid and slashed" : "not yet"}
           />
         </dl>
       </Section>
 
-      <div className="rule-t py-8">
-        <Link
-          href="/"
-          className="font-data text-[0.78rem] text-soft transition-colors hover:text-ink"
-        >
-          ← All markets
+      <div className="border-t border-line py-8">
+        <Link href="/" className="btn">
+          All markets
         </Link>
       </div>
     </article>
   );
 }
 
-function Pool({
-  side,
-  value,
-  share,
-  won,
-}: {
-  side: "YES" | "NO";
-  value: bigint;
-  share: number | null;
-  won: boolean;
-}) {
-  return (
-    <div className="bg-leaf p-5">
-      <div className="flex items-baseline justify-between">
-        <span className="font-data text-sm tracking-wide">
-          <Side side={side} />
-        </span>
-        {won ? <span className="label text-affirm">ruled</span> : null}
-      </div>
-      <div className="mt-2 text-2xl font-light">
-        {share === null ? "—" : `${share.toFixed(1)}%`}
-      </div>
-      <div className="mt-1 font-data text-xs text-faint">{amount(value)} staked</div>
-      {share !== null ? (
-        <div className="mt-3 h-px w-full bg-rule">
-          <div
-            className={`h-px ${side === "YES" ? "bg-affirm" : "bg-deny"}`}
-            style={{ width: `${Math.max(share, 1)}%` }}
-          />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function ExhibitRow({
-  index,
-  x,
-  finalOutcome,
-}: {
-  index: number;
-  x: Exhibit;
-  finalOutcome: number | null;
-}) {
+function ExhibitCard({ x, finalOutcome }: { x: Exhibit; finalOutcome: number | null }) {
   const s = x.submission;
   const e = x.evidence;
   const correct = finalOutcome === null ? null : s.outcome === finalOutcome;
 
   return (
-    <li className="border-b border-rule py-5 last:border-b-0">
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-        <span className="font-data text-[0.72rem] text-faint">
-          {String(index).padStart(2, "0")}
-        </span>
-        <Link
-          href={`/agents/#agent-${s.agent_id}`}
-          className="font-data text-sm underline decoration-rule-strong underline-offset-4"
-        >
-          Agent {s.agent_id}
-        </Link>
-        <span className="font-data text-sm">
-          said <Side side={s.outcome === 1 ? "YES" : "NO"} />
-        </span>
-        <span className="label">at {weight(s.weight)}</span>
-        {e ? <Provenance kind={e.sourceClass} /> : null}
+    <li className="panel p-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href={`/agents/#agent-${s.agent_id}`}
+            className="font-data text-[0.85rem] underline decoration-line-firm underline-offset-4 transition-colors hover:text-fg"
+          >
+            Agent {s.agent_id}
+          </Link>
+          <Side side={s.outcome === 1 ? "YES" : "NO"} />
+          <span className="tag">weight {weight(s.weight)}</span>
+          {e ? <Provenance kind={e.sourceClass} /> : null}
+        </div>
+
         {correct !== null ? (
           <span
-            className={`font-data text-[0.68rem] uppercase tracking-[0.1em] ${
-              correct ? "text-affirm" : "text-deny"
+            className={`rounded-md px-2 py-0.5 text-[0.75rem] ${
+              correct ? "bg-[var(--yes-wash)] text-yes" : "bg-[var(--no-wash)] text-no"
             }`}
           >
-            {correct ? "bond returned, paid" : "bond slashed"}
+            {correct ? "paid" : "bond slashed"}
           </span>
         ) : null}
       </div>
 
       {e ? (
-        <div className="mt-3 sm:pl-[2.4rem]">
-          <p className="max-w-2xl leading-relaxed">{e.reasoning}</p>
+        <>
+          <p className="mt-3 max-w-2xl leading-relaxed">{e.reasoning}</p>
 
           {e.caveat ? (
-            <p className="mt-2 max-w-2xl border-l-2 border-rule-strong pl-3 text-sm italic leading-relaxed text-soft">
+            <p className="mt-2.5 max-w-2xl border-l-2 border-line-firm pl-3 text-[0.85rem] leading-relaxed text-mid">
               {e.caveat}
             </p>
           ) : null}
 
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
             {e.sources.map((src) => (
               <SourceRef key={src} href={src} />
             ))}
+            <span className="tag">
+              {x.intact ? "evidence matches its hash" : "hash mismatch"}
+            </span>
           </div>
-
-          <p className="mt-3 font-data text-[0.68rem] text-faint">
-            {x.intact
-              ? "evidence matches the hash it committed to"
-              : "evidence does NOT match its hash"}
-            {" · "}
-            {toHex(s.evidence_hash).slice(0, 16)}…
-          </p>
-        </div>
+        </>
       ) : (
-        <p className="mt-2 text-sm italic text-faint sm:pl-[2.4rem]">
-          Evidence could not be decoded.
-        </p>
+        <p className="mt-2 text-[0.88rem] text-dim">Evidence could not be decoded.</p>
       )}
     </li>
   );
@@ -318,7 +264,7 @@ function ExhibitRow({
 /** On-chain citations are not links; everything else is. */
 function SourceRef({ href }: { href: string }) {
   if (!href.startsWith("http")) {
-    return <span className="hash text-xs text-faint">{href}</span>;
+    return <span className="hash text-[0.72rem] text-dim">{href}</span>;
   }
   let label = href;
   try {
@@ -331,7 +277,7 @@ function SourceRef({ href }: { href: string }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="font-data text-xs text-soft underline decoration-rule-strong underline-offset-4 transition-colors hover:text-ink"
+      className="text-[0.78rem] text-mid underline decoration-line-firm underline-offset-4 transition-colors hover:text-fg"
     >
       {label} ↗
     </a>
@@ -340,9 +286,9 @@ function SourceRef({ href }: { href: string }) {
 
 function Entry({ term, value }: { term: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-rule py-2">
-      <dt className="text-sm text-soft">{term}</dt>
-      <dd className="font-data text-sm">{value}</dd>
+    <div className="flex items-baseline justify-between gap-4 border-b border-line pb-2">
+      <dt className="text-[0.88rem] text-mid">{term}</dt>
+      <dd className="font-data text-[0.85rem]">{value}</dd>
     </div>
   );
 }

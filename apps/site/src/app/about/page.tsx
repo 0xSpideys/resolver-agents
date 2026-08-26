@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { TESTNET } from "@verdict/sdk";
 
-import { Field, Section } from "@/components/ui";
+import { Section, Stat } from "@/components/ui";
 import report from "@/data/report.json";
 
 export const metadata: Metadata = {
@@ -68,10 +68,10 @@ export default function About() {
   return (
     <div>
       <header className="max-w-xl py-12 sm:py-16">
-        <h1 className="text-[1.9rem] font-light leading-tight tracking-tight sm:text-[2.4rem]">
+        <h1 className="font-display text-[2.4rem] leading-[1.05] tracking-tight sm:text-[3rem]">
           Resolution is the unsolved half
         </h1>
-        <p className="mt-4 text-[1.05rem] leading-relaxed text-soft">
+        <p className="mt-4 text-[1.05rem] leading-relaxed text-mid">
           Markets settle in one of three ways: an admin decides, a price feed decides,
           or the crowd votes. Trusted, price-only, or Sybil-shaped.
         </p>
@@ -83,14 +83,12 @@ export default function About() {
       </header>
 
       <Section label="Lifecycle">
-        <ol>
+        <ol className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((s) => (
-            <li key={s.n} className="flex gap-5 border-b border-rule py-4 last:border-b-0">
-              <span className="font-data text-[0.72rem] text-faint">{s.n}</span>
-              <div>
-                <h3 className="leading-snug">{s.t}</h3>
-                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-soft">{s.b}</p>
-              </div>
+            <li key={s.n} className="bg-panel p-4">
+              <span className="font-data text-[0.72rem] text-dim">{s.n}</span>
+              <h3 className="mt-1.5 font-medium leading-snug">{s.t}</h3>
+              <p className="mt-1 text-[0.85rem] leading-relaxed text-mid">{s.b}</p>
             </li>
           ))}
         </ol>
@@ -98,9 +96,9 @@ export default function About() {
 
       <Section
         label="The payout"
-        title="Parimutuel. No curve, no market maker."
+        note="Parimutuel. No curve, no market maker."
       >
-        <pre className="overflow-x-auto border border-rule bg-leaf p-5 font-data text-xs leading-relaxed">
+        <pre className="max-w-xl overflow-x-auto rounded-xl border border-line bg-panel p-5 font-data text-xs leading-relaxed">
 {`losing_pool   = total_staked − winning_pool
 fee           = losing_pool × 2%
 resolver_pool = 60% of the fee
@@ -108,7 +106,7 @@ distributable = losing_pool − fee
 
 payout        = stake + stake × distributable / winning_pool`}
         </pre>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-soft">
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-mid">
           A winner never gets back less than their stake, and rounding always falls
           toward the protocol, so claims can never exceed escrow. An empty side, no
           submissions, or an exact tie voids the market: everything refunded, no fee,
@@ -116,7 +114,7 @@ payout        = stake + stake × distributable / winning_pool`}
         </p>
       </Section>
 
-      <Section label="On-chain" title="All on Stellar testnet.">
+      <Section label="On-chain" note="All on Stellar testnet.">
         <div className="space-y-3">
           <Addr label="Verdict market" value={TESTNET.verdict} />
           <Addr label="8004 identity" value={TESTNET.identityRegistry} />
@@ -124,52 +122,52 @@ payout        = stake + stake × distributable / winning_pool`}
           <Addr label="Reflector oracle" value={TESTNET.reflector.external} />
           <Addr label="Settlement token" value={TESTNET.token} />
         </div>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-faint">
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-dim">
           The 8004 registries are not ours. They are shared infrastructure, which is
           why a record earned here is worth something elsewhere.
         </p>
       </Section>
 
-      <Section label="Build" title="From a real test and build run.">
+      <Section label="Build" note="From a real test and build run.">
         <div className="flex flex-wrap items-baseline gap-x-10 gap-y-4">
-          <Field label="Tests">
-            <span className={green ? "text-affirm" : "text-deny"}>
+          <Stat label="Tests">
+            <span className={green ? "text-yes" : "text-no"}>
               {report.test.passed} passing
               {report.test.failed > 0 ? `, ${report.test.failed} failing` : ""}
             </span>
-          </Field>
-          <Field label="Toolchain">{report.toolchain.sorobanSdk}</Field>
+          </Stat>
+          <Stat label="Toolchain">{report.toolchain.sorobanSdk}</Stat>
           {report.build.onChain ? (
-            <Field label="Deployed contract">
+            <Stat label="Deployed contract">
               <span
                 className={
-                  report.build.onChain.matchesLocalBuild ? "text-affirm" : "text-deny"
+                  report.build.onChain.matchesLocalBuild ? "text-yes" : "text-no"
                 }
               >
                 {report.build.onChain.matchesLocalBuild
                   ? "matches this source"
                   : "differs from this source"}
               </span>
-            </Field>
+            </Stat>
           ) : null}
         </div>
         {report.build.wasm ? (
-          <p className="hash mt-4 text-xs text-faint">
+          <p className="hash mt-4 text-xs text-dim">
             {report.build.wasm.name} · {report.build.wasm.sha256}
           </p>
         ) : null}
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-soft">
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-mid">
           The deployed contract is fetched and hashed against a fresh local build. A
           match means the repository compiles to the contract holding the escrow.
         </p>
       </Section>
 
       <Section label="What this does not do">
-        <dl className="space-y-5">
+        <dl className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
           {LIMITS.map((l) => (
-            <div key={l.t}>
-              <dt className="leading-snug">{l.t}</dt>
-              <dd className="mt-1 max-w-2xl text-sm leading-relaxed text-soft">{l.b}</dd>
+            <div key={l.t} className="bg-panel p-4">
+              <dt className="font-medium leading-snug">{l.t}</dt>
+              <dd className="mt-1 text-[0.85rem] leading-relaxed text-mid">{l.b}</dd>
             </div>
           ))}
         </dl>
@@ -181,12 +179,12 @@ payout        = stake + stake × distributable / winning_pool`}
 function Addr({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid gap-1 sm:grid-cols-[10rem_1fr] sm:items-baseline sm:gap-4">
-      <span className="label">{label}</span>
+      <span className="tag">{label}</span>
       <a
         href={`https://stellar.expert/explorer/testnet/contract/${value}`}
         target="_blank"
         rel="noreferrer"
-        className="hash text-xs text-soft underline decoration-rule underline-offset-4 transition-colors hover:text-ink"
+        className="hash text-xs text-mid underline decoration-rule underline-offset-4 transition-colors hover:text-fg"
       >
         {value}
       </a>
