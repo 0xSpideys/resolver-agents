@@ -65,7 +65,7 @@ function MarketPage() {
         </p>
         <p className="hash mt-3 text-xs text-faint">{query.error}</p>
         <Link href="/" className="mt-6 inline-block font-data text-sm text-soft underline decoration-rule-strong underline-offset-4">
-          Back to the docket
+          All markets
         </Link>
       </div>
     );
@@ -99,10 +99,9 @@ function MarketPage() {
         ) : null}
 
         {m.state === "Void" ? (
-          <p className="mt-5 max-w-xl leading-relaxed text-soft">
-            Voided. No outcome could be established, so every stake is refundable in
-            full, every bond went back, no fee was taken, and nothing was recorded
-            about who was right.
+          <p className="mt-4 max-w-lg leading-relaxed text-soft">
+            No outcome could be established. Every stake is refundable in full and
+            every bond went back. No fee taken, nothing recorded.
           </p>
         ) : null}
       </header>
@@ -123,29 +122,27 @@ function MarketPage() {
               <span className="text-affirm">matches the chain</span>
             </Field>
           </div>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-faint">
-            The criteria were hashed when the market opened, and the document above
-            reproduces that hash in your browser just now. Nobody can restate the
-            question once positions are on it. An agent that finds a mismatch
-            refuses to resolve rather than guessing which version is real.
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-faint">
+            Hashed when the market opened, and re-checked in your browser just now.
+            The question cannot be restated once positions are on it.
           </p>
         </Section>
       ) : (
         <Section label="Criteria">
-          <p className="max-w-2xl text-[1.02rem] leading-relaxed text-deny">
-            The question document does not hash to the value stored on-chain, so
-            there is no trustworthy statement of what this market asks.
+          <p className="max-w-xl text-[1.02rem] leading-relaxed text-deny">
+            The question does not match the hash on-chain, so there is no
+            trustworthy statement of what this market asks.
           </p>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-faint">
-            The earliest markets on this deployment were opened before question
-            hashing was enforced. They are left visible rather than quietly hidden.
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-faint">
+            An early market, opened before hashing was enforced. Left visible rather
+            than hidden.
           </p>
         </Section>
       )}
 
       <Section
         label="Positions"
-        title="Parimutuel. The winning side splits what the other side staked."
+        title="The winning side splits what the other side staked."
       >
         <div className="grid gap-px overflow-hidden border border-rule bg-rule sm:grid-cols-2">
           <Pool side="YES" value={pools.yes} share={impliedYes} won={settled && m.final_outcome === 1} />
@@ -166,7 +163,7 @@ function MarketPage() {
         </div>
       </Section>
 
-      <Section label="Exhibits" title="What each agent found, and what it staked on being right.">
+      <Section label="Exhibits" title="What each agent found, and what it staked on it.">
         {exhibits.length === 0 ? (
           <p className="text-sm italic text-faint">No agent has submitted yet.</p>
         ) : (
@@ -183,7 +180,7 @@ function MarketPage() {
         )}
       </Section>
 
-      <Section label="Docket" title="Every deadline is on-chain and enforced by the contract.">
+      <Section label="Timing" title="Enforced by the contract.">
         <dl className="grid gap-x-10 gap-y-1 sm:grid-cols-2">
           <Entry term="Trading closed" value={relative(m.close_ts)} />
           <Entry term="Agents had until" value={relative(m.resolve_deadline)} />
@@ -202,7 +199,7 @@ function MarketPage() {
           href="/"
           className="font-data text-[0.78rem] text-soft transition-colors hover:text-ink"
         >
-          ← Back to the docket
+          ← All markets
         </Link>
       </div>
     </article>

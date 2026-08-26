@@ -1,44 +1,45 @@
 @import "tailwindcss";
 
 /*
- * The interface is a case file.
+ * Paper, not a terminal.
  *
- * A market is a matter with a statement, a set of exhibits and a ruling, so the
- * page is built like a document rather than a dashboard: ruled lines instead of
- * stacked cards, a margin column carrying metadata, serif for anything written
- * and monospace for anything measured. There is no sans-serif in the system at
- * all, which is most of why it does not look like every other app.
+ * The palette is warm and light by default. Dark mode is a dim room rather than
+ * a void: still paper, just under less light. Pure black reads as a console and
+ * fights the serif.
+ *
+ * Serif for anything written, monospace for anything measured, no sans-serif at
+ * all. Separation is by ruled line, not by stacking cards.
  */
 
 :root {
-  --paper: #f6f3ec;
-  --leaf: #fffdf8;
-  --sunk: #efebe1;
-  --ink: #191713;
-  --ink-soft: #6b6558;
-  --ink-faint: #97907f;
-  --rule: #ddd7c8;
-  --rule-strong: #c4bcaa;
-  --seal: #8a3324;
-  --affirm: #2f5d43;
-  --deny: #8a3324;
-  --mark: #9a6b16;
+  --paper: #faf8f2;
+  --leaf: #ffffff;
+  --sunk: #f1ede3;
+  --ink: #211e19;
+  --ink-soft: #5d574b;
+  --ink-faint: #8d8677;
+  --rule: #e4dece;
+  --rule-strong: #cdc5b1;
+  --seal: #9c4221;
+  --affirm: #2f6146;
+  --deny: #9c4221;
+  --mark: #8a6414;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #131110;
-    --leaf: #1a1816;
-    --sunk: #201d1a;
-    --ink: #ece6da;
-    --ink-soft: #948c7c;
-    --ink-faint: #6d6659;
-    --rule: #2c2823;
-    --rule-strong: #423c33;
-    --seal: #d4694f;
-    --affirm: #74b48c;
-    --deny: #d4694f;
-    --mark: #cfa14e;
+    --paper: #262320;
+    --leaf: #2e2b26;
+    --sunk: #34302a;
+    --ink: #f0ebe0;
+    --ink-soft: #b3aa99;
+    --ink-faint: #8a8271;
+    --rule: #423d35;
+    --rule-strong: #5a5348;
+    --seal: #e08a63;
+    --affirm: #86c39c;
+    --deny: #e08a63;
+    --mark: #d7ad63;
   }
 }
 
@@ -75,18 +76,14 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Numbers must line up in columns; the serif's default figures do not. */
-.tnum,
+/* Figures have to line up in columns; the serif's default ones do not. */
 .font-data,
 [class*="font-data"] {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
 
-/*
- * The margin label. Small caps monospace, set against the left rule, the way a
- * document annotates itself rather than titling every block.
- */
+/* The margin annotation: small monospace caps, set against the rule. */
 .label {
   font-family: var(--font-mono), monospace;
   font-size: 0.6875rem;
@@ -95,7 +92,6 @@ body {
   color: var(--ink-faint);
 }
 
-/* A hairline that reads as a ruled page, not a card border. */
 .rule-t {
   border-top: 1px solid var(--rule);
 }
@@ -108,24 +104,40 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--seal) 22%, transparent);
+  background: color-mix(in srgb, var(--seal) 20%, transparent);
 }
 
 a {
   color: inherit;
 }
 
-/* The seal: a small letterpress-feeling marker used for the wordmark only. */
-.seal-mark {
+/* The one button style. Bordered, not filled: this is a document, not a form. */
+.action {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 1.55rem;
-  height: 1.55rem;
+  gap: 0.5rem;
   border: 1px solid var(--rule-strong);
-  color: var(--seal);
-  font-family: var(--font-serif), serif;
-  font-size: 0.95rem;
-  line-height: 1;
+  padding: 0.5rem 0.95rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
   border-radius: 2px;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.action:hover {
+  background: var(--sunk);
+  border-color: var(--ink-faint);
+}
+
+.action-primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.action-primary:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  opacity: 0.88;
 }

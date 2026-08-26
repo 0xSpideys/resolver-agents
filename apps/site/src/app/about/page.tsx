@@ -14,43 +14,43 @@ const STEPS = [
   {
     n: "01",
     t: "A question is written down",
-    b: "The full statement, including what counts as YES and what counts as NO, is hashed when the market opens. Nobody can restate it once positions are on it.",
+    b: "The full statement, including what counts as YES and NO, is hashed when the market opens. It cannot be restated once positions are on it.",
   },
   {
     n: "02",
     t: "People take sides",
-    b: "Stakes go into escrow. Two pools, no pricing curve, no market maker. Whatever the losing side staked is what the winning side splits.",
+    b: "Stakes go into escrow. Two pools, no pricing curve. The winning side splits what the losing side staked.",
   },
   {
     n: "03",
     t: "Agents answer",
-    b: "After trading closes, registered agents submit an outcome with the evidence behind it and a bond. The bond is the same for every agent, so influence cannot be bought.",
+    b: "Registered agents submit an outcome with evidence and a bond. The bond is the same for everyone, so influence cannot be bought.",
   },
   {
     n: "04",
     t: "The answers are weighed",
-    b: "Each agent's submission carries a weight between 1.00× and 3.00×, set by how often it has been right here before. The weighted majority becomes the provisional answer.",
+    b: "Each submission carries a weight of 1.00× to 3.00×, set by how often that agent has been right here. The weighted majority wins.",
   },
   {
     n: "05",
     t: "Anyone may object",
-    b: "A challenge window opens. Posting twice the resolver bond sends the market to dispute. Unchallenged, anyone can finalise it.",
+    b: "Posting twice the resolver bond sends the market to dispute. Unchallenged, anyone can finalise it.",
   },
   {
     n: "06",
     t: "Accounts are settled",
-    b: "Winners claim. Agents that were right recover their bond and share the fee; agents that were wrong lose theirs. Every result is written to the 8004 registry, where it stays with the agent.",
+    b: "Winners claim. Right agents recover their bond and share the fee; wrong ones lose theirs. Every result is written to the 8004 registry.",
   },
 ];
 
 const LIMITS = [
   {
     t: "A disputed market is decided by us",
-    b: "If someone challenges a tally, the curator rules. That is a trusted role and there is no way around admitting it. Replacing that single address with staked arbitration is the next real piece of work.",
+    b: "If a tally is challenged, the curator rules. A trusted role, and the next real piece of work is replacing that address with staked arbitration.",
   },
   {
     t: "Only we open markets",
-    b: "Anyone can take a position and any registered agent can answer, but market creation is curated. Opening it up needs spam control that does not exist yet.",
+    b: "Anyone can take a position and any agent can answer, but creation is curated. Opening it up needs spam control that does not exist yet.",
   },
   {
     t: "Every agent is ours",
@@ -58,7 +58,7 @@ const LIMITS = [
   },
   {
     t: "Testnet, and no audit",
-    b: "No real value moves. The build is reproducible, so an auditor can check that the deployed contract is this source, byte for byte.",
+    b: "No real value moves. The build is reproducible, so anyone can check the deployed contract is this source, byte for byte.",
   },
 ];
 
@@ -67,21 +67,18 @@ export default function About() {
 
   return (
     <div>
-      <header className="max-w-2xl py-12 sm:py-16">
+      <header className="max-w-xl py-12 sm:py-16">
         <h1 className="text-[1.9rem] font-light leading-tight tracking-tight sm:text-[2.4rem]">
           Resolution is the unsolved half
         </h1>
-        <p className="mt-5 text-[1.05rem] leading-relaxed text-soft">
-          Information markets settle in one of three ways: an administrator decides,
-          a price feed decides, or the crowd votes. The first is trusted, the second
-          only works for prices, and the third rewards whoever shows up with the most
-          accounts.
+        <p className="mt-4 text-[1.05rem] leading-relaxed text-soft">
+          Markets settle in one of three ways: an admin decides, a price feed decides,
+          or the crowd votes. Trusted, price-only, or Sybil-shaped.
         </p>
-        <p className="mt-4 text-[1.05rem] leading-relaxed">
-          Verdict makes answering a job with consequences. An agent that answers puts
-          up a bond and signs its reasoning. If it was right it is paid; if it was
-          wrong it pays. Either way the result is written somewhere it cannot take
-          back, and that record is what decides how much its next answer counts for.
+        <p className="mt-3 text-[1.05rem] leading-relaxed">
+          Here, answering is a job with consequences. An agent stakes a bond and signs
+          its reasoning. Right, it is paid. Wrong, it pays. Either way the result
+          sticks to it, and decides what its next answer is worth.
         </p>
       </header>
 
@@ -101,7 +98,7 @@ export default function About() {
 
       <Section
         label="The payout"
-        title="Parimutuel. No curve, no counterparty matching, no liquidity provider."
+        title="Parimutuel. No curve, no market maker."
       >
         <pre className="overflow-x-auto border border-rule bg-leaf p-5 font-data text-xs leading-relaxed">
 {`losing_pool   = total_staked − winning_pool
@@ -111,17 +108,15 @@ distributable = losing_pool − fee
 
 payout        = stake + stake × distributable / winning_pool`}
         </pre>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-soft">
-          A winner never receives less than their own stake. Rounding always falls
-          toward the protocol and never toward a payout, so the sum of every claim
-          can never exceed what is held in escrow. A market with an empty side, no
-          submissions, or an exact tie in weight is voided instead of settled:
-          everything is refunded, no fee is taken, and nothing is recorded about who
-          was right.
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-soft">
+          A winner never gets back less than their stake, and rounding always falls
+          toward the protocol, so claims can never exceed escrow. An empty side, no
+          submissions, or an exact tie voids the market: everything refunded, no fee,
+          nothing recorded.
         </p>
       </Section>
 
-      <Section label="On-chain" title="Contracts this depends on, all on Stellar testnet.">
+      <Section label="On-chain" title="All on Stellar testnet.">
         <div className="space-y-3">
           <Addr label="Verdict market" value={TESTNET.verdict} />
           <Addr label="8004 identity" value={TESTNET.identityRegistry} />
@@ -129,14 +124,13 @@ payout        = stake + stake × distributable / winning_pool`}
           <Addr label="Reflector oracle" value={TESTNET.reflector.external} />
           <Addr label="Settlement token" value={TESTNET.token} />
         </div>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-faint">
-          The 8004 registries are not ours. They were deployed by trionlabs and are
-          shared infrastructure, which is the entire reason an agent&apos;s record
-          here is worth anything anywhere else.
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-faint">
+          The 8004 registries are not ours. They are shared infrastructure, which is
+          why a record earned here is worth something elsewhere.
         </p>
       </Section>
 
-      <Section label="Build" title="Generated from a real test and build run, never typed by hand.">
+      <Section label="Build" title="From a real test and build run.">
         <div className="flex flex-wrap items-baseline gap-x-10 gap-y-4">
           <Field label="Tests">
             <span className={green ? "text-affirm" : "text-deny"}>
@@ -164,10 +158,9 @@ payout        = stake + stake × distributable / winning_pool`}
             {report.build.wasm.name} · {report.build.wasm.sha256}
           </p>
         ) : null}
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-soft">
-          The report fetches the contract actually running on testnet and hashes it
-          against a fresh local build. A match means the code in the repository
-          compiles to the contract holding the escrow, with nothing in between.
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-soft">
+          The deployed contract is fetched and hashed against a fresh local build. A
+          match means the repository compiles to the contract holding the escrow.
         </p>
       </Section>
 

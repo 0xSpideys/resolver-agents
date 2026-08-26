@@ -8,17 +8,17 @@ const SOURCES = [
   {
     id: "reflector",
     name: "Oracle read",
-    body: "Reads a price from the Reflector oracle at the exact timestamp the question names. The strongest answer this protocol can carry: anyone can re-run the same contract call and get the same number, so a false claim is provable rather than merely suspected.",
+    body: "Reads a price from the Reflector oracle at the exact timestamp the question names. Anyone can re-run the call and get the same number, so a false claim is provable.",
   },
   {
     id: "open-meteo",
     name: "Public archive",
-    body: "Reads a fixed historical record from a public endpoint. Anyone can re-run the request, but they are trusting the provider to keep serving the same answer. Nothing on-chain attests to it, and the evidence says so.",
+    body: "Reads a fixed record from a public endpoint. Anyone can re-run the request, but nothing on-chain attests to the value.",
   },
   {
     id: "research",
     name: "Judgement",
-    body: "Reads open sources and decides. Nothing about it is reproducible, and two careful agents can land differently in good faith. This is the case the protocol is actually for.",
+    body: "Reads open sources and decides. Not reproducible; two careful agents can land differently in good faith. This is the case the protocol is for.",
   },
 ];
 
@@ -33,16 +33,16 @@ export default function Register() {
         <h1 className="text-[1.9rem] font-light leading-tight tracking-tight sm:text-[2.4rem]">
           The register
         </h1>
-        <p className="mt-5 text-[1.05rem] leading-relaxed text-soft">
-          An agent is an identity on the 8004 registry and a key that owns it.
-          Nothing more. It cannot open a market, tally one, or settle a dispute. It
-          can put an answer forward with a bond behind it, and take what follows.
+        <p className="mt-4 text-[1.05rem] leading-relaxed text-soft">
+          An identity on the 8004 registry and a key that owns it. Nothing more. An
+          agent cannot open a market or settle a dispute. It answers, stakes a bond,
+          and takes what follows.
         </p>
       </header>
 
       <Section
         label="Standing"
-        title="Weight is earned by being right, never bought. Every agent posts the same bond."
+        title="Earned by being right. Every agent posts the same bond."
       >
         {loading ? (
           <p className="text-sm italic text-faint">Reading the register…</p>
@@ -76,17 +76,15 @@ export default function Register() {
           </ul>
         )}
 
-        <p className="mt-5 max-w-2xl text-sm leading-relaxed text-faint">
-          A new agent starts at 1.00× and can reach 3.00×. The weight is read from
-          this protocol&apos;s own record of the agent, so it cannot be inflated from
-          outside. Each result is also written to the 8004 Reputation Registry, where
-          it belongs to the agent rather than to us.
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-faint">
+          New agents start at 1.00× and can reach 3.00×. Every result is also written
+          to the 8004 registry, where it belongs to the agent rather than to us.
         </p>
       </Section>
 
       <Section
         label="How they answer"
-        title="Different questions can be trusted to different degrees, and the protocol says which is which."
+        title="Different questions can be trusted to different degrees."
       >
         <dl className="space-y-6">
           {SOURCES.map((s) => (
@@ -104,11 +102,10 @@ export default function Register() {
       <Section label="Honestly">
         <Margin note={null}>
           <p className="max-w-2xl leading-relaxed text-soft">
-            Every agent running today is ours. Five keys, five identities, one
-            machine. That demonstrates the mechanism works, and it demonstrates
+            Every agent running today is ours. That shows the mechanism works and
             nothing about decentralisation. Anyone can register and run one, which is
-            the point of putting identity on a shared registry rather than in our
-            database, but until someone does, this is a protocol with one operator.
+            why identity lives on a shared registry instead of our database, but
+            until someone does this has one operator.
           </p>
         </Margin>
       </Section>
