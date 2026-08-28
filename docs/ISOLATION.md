@@ -63,10 +63,15 @@ rewrites are cheap while the repo is small and expensive once it is not.
 
 ## Third-party credentials
 
-The research resolver calls the Anthropic API and needs a key. It is read from
-`ANTHROPIC_API_KEY` at runtime and must come from an account with no connection
-to any other identity — same rule as everything else here.
+The research resolver calls a model through OpenRouter and needs a key. It is
+read from `OPENROUTER_API_KEY` at runtime and must come from an account with no
+connection to any other identity — same rule as everything else here.
 
-The key never enters the repository, a config file, or a commit. If a future
-deployment needs it present somewhere, that somewhere is subject to this whole
-document, not an exception to it.
+OpenRouter is deliberately the only hosted dependency the resolver has, and it
+is a routing layer rather than a vendor commitment: the model is chosen by
+`OPENROUTER_MODEL`, so swapping providers is configuration, not a code change.
+
+The key never enters the repository, a tracked config file, or a commit. `.env`
+is gitignored; `.env.example` is the tracked copy and holds no values. If a
+future deployment needs the key present somewhere, that somewhere is subject to
+this whole document, not an exception to it.

@@ -273,16 +273,24 @@ keep working exactly as before, and the site labels each market's token
 correctly (`market.token === TESTNET.token ? "XLM" : "VUSD"` in
 `apps/site/src/components/actions.tsx`).
 
-**2. Not pushed.** 7 commits sit local. `origin/main` has no conflict. Pushing
-triggers the GitHub Pages workflow (`.github/workflows/pages.yml`) and produces
-a public URL. **The user has not yet said "push".** Ask.
+**2. Pushed and live.** `main` is on `origin`, the Pages workflow ran, and the
+site serves at `https://0xspideys.github.io/resolver-agents/`.
 
-**3. Research agent untested.** Needs an `ANTHROPIC_API_KEY` from an isolated
-account. The user said they will supply their own separate API key. Until then
-the source is written but has never executed. It is the strongest part of the
-story — "an agent that actually goes and reads" — so land it as soon as the key
-arrives. Model defaults to `claude-opus-5`; `ANTHROPIC_MODEL` overrides.
-Note the web-search tool variant differs by model (already handled).
+**3. Research agent untested.** Routed through **OpenRouter**, not a single
+vendor: `OPENROUTER_API_KEY` from an isolated account, model from
+`OPENROUTER_MODEL` defaulting to `google/gemini-3.7-flash`. Structured output
+via `response_format: json_schema` (strict), web search via OpenRouter's own
+`plugins: [{id:"web"}]`, so the capability does not depend on the chosen model
+shipping a search tool. Plain `fetch`, no SDK dependency.
+
+Verified so far: schema generation, all three error paths, and that a
+well-formed request reaches OpenRouter (a bad key returns 401, not 400). What
+has *never* run is a real completion — the reply parsing and the citation
+merge are unexercised until a valid key is present. Copy `.env.example` to
+`.env` and fill in `OPENROUTER_API_KEY`.
+
+It is the strongest part of the story — "an agent that actually goes and reads"
+— so land it as soon as the key arrives.
 
 ### Known gaps, not blocking
 

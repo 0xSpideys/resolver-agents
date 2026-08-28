@@ -22,10 +22,16 @@ pnpm resolve                      # resolve everything resolvable, once
 |---|---|---|
 | `AGENT_SECRET_KEY` | — | required |
 | `AGENT_ID` | — | required for everything except `register` |
-| `RESOLUTION_SOURCE` | `stellar-ledger` | `stellar-ledger` or `contrarian` |
+| `RESOLUTION_SOURCE` | `reflector` | `reflector`, `open-meteo`, `research`, `contrarian` |
+| `OPENROUTER_API_KEY` | — | `research` source only |
+| `OPENROUTER_MODEL` | `google/gemini-3.7-flash` | any OpenRouter model with structured outputs |
 | `VERDICT_CONTRACT` | current testnet deployment | |
 | `RPC_URL` | `soroban-testnet.stellar.org` | |
 | `POLL_INTERVAL` | `15` | seconds, `watch` mode only |
+
+Values may also live in a `.env` at the repository root — copy `.env.example`.
+A real environment variable always wins over the file. Never commit `.env`; see
+[`docs/ISOLATION.md`](../../docs/ISOLATION.md).
 
 ## Commands
 

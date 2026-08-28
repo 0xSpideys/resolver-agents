@@ -18,7 +18,8 @@ Environment:
   AGENT_SECRET_KEY   required, S... secret key
   AGENT_ID           8004 agent id (needed by everything except register)
   RESOLUTION_SOURCE  reflector (default) | open-meteo | research | contrarian
-  ANTHROPIC_API_KEY  only needed by the research source
+  OPENROUTER_API_KEY only needed by the research source
+  OPENROUTER_MODEL   research model, default google/gemini-3.7-flash
   VERDICT_CONTRACT   defaults to the current testnet deployment
   RPC_URL            defaults to soroban-testnet.stellar.org
   POLL_INTERVAL      seconds between polls in watch mode, default 15

@@ -81,7 +81,7 @@ export class Agent {
     const finding = await source.resolve({
       chain: this.chain,
       question,
-      anthropicApiKey: this.cfg.anthropicApiKey,
+      openRouterApiKey: this.cfg.openRouterApiKey,
     });
 
     const evidence = buildEvidence({

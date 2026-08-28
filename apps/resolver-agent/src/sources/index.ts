@@ -19,7 +19,7 @@ export interface Finding {
 export interface SourceContext {
   chain: Chain;
   question: QuestionDocument;
-  anthropicApiKey?: string;
+  openRouterApiKey?: string;
 }
 
 export interface ResolutionSource {
