@@ -294,6 +294,12 @@ caveat.** That is the source class behaving as documented, not a defect — but
 it is why `research` questions carry the `research` class and why the caveat is
 part of the evidence contract.
 
+The call carries a 70s timeout and one retry, bounded so that two attempts plus
+backoff still fit inside the 300s resolve window with room for the chain write.
+Only transient failures are retried — a 401 or a 400 fails immediately, because
+sending the same rejected request again just spends the window. Tunable with
+`OPENROUTER_TIMEOUT_MS` and `OPENROUTER_ATTEMPTS`.
+
 ### Known gaps, not blocking
 
 - **Dispute resolution is centralised.** A challenged tally is decided by the
@@ -308,12 +314,7 @@ part of the evidence contract.
 - **No audit, testnet only.**
 - No demo video.
 - `apps/site` reads markets in a loop with no indexer. Fine at this scale.
-- **The OpenRouter call has no timeout and no retry.** One request aborted
-  mid-run during the market #16 cycle and the agent simply skipped that market;
-  a rerun went through. Harmless where an agent polls, but it means a single
-  transient failure can cost an agent a resolve window it cannot get back.
-  `contrarian` inherits this, since it wraps a real research finding rather
-  than inventing one.
+- Nothing else outstanding that is not a deliberate v2 decision.
 
 `docs/V2_ROADMAP.md` lists twelve extension points deliberately built into v1.
 
@@ -414,12 +415,12 @@ changes — the site renders the committed file, and Pages has no Rust toolchain
 
 ## 10. Suggested next steps, in order
 
-1. **A timeout and one retry on the OpenRouter call.** The cheapest fix on this
-   list and the only one that has already bitten. See "Known gaps".
-2. **Demo video / runbook**, if they want one. Market #16 is the cycle worth
+1. **Demo video / runbook**, if they want one. Market #16 is the cycle worth
    recording: two agents disagreeing, weight deciding, reputation moving.
-3. **Regenerate `report.json`** whenever the contract next changes. It is
+2. **Regenerate `report.json`** whenever the contract next changes. It is
    current as of the 43-test suite and the deployed wasm hash still matches.
+
+Then, only if there is appetite, the v2 pillars below.
 
 Then, only if there is appetite: staked arbitration (v2 pillar 1), permissionless
 market creation (pillar 2), mainnet + audit (pillar 3).

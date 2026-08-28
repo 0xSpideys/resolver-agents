@@ -25,6 +25,8 @@ pnpm resolve                      # resolve everything resolvable, once
 | `RESOLUTION_SOURCE` | `reflector` | `reflector`, `open-meteo`, `research`, `contrarian` |
 | `OPENROUTER_API_KEY` | — | `research` source only |
 | `OPENROUTER_MODEL` | `google/gemini-3.7-flash` | any OpenRouter model with structured outputs |
+| `OPENROUTER_TIMEOUT_MS` | `70000` | per attempt; must leave room inside the resolve window |
+| `OPENROUTER_ATTEMPTS` | `2` | transient failures only; a 4xx never retries |
 | `VERDICT_CONTRACT` | current testnet deployment | |
 | `RPC_URL` | `soroban-testnet.stellar.org` | |
 | `POLL_INTERVAL` | `15` | seconds, `watch` mode only |

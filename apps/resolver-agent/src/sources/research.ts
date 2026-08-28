@@ -30,6 +30,20 @@ import type { Finding, ResolutionSource, SourceContext } from "./index";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 /**
+ * Per-attempt timeout and attempt count.
+ *
+ * Both are bounded by the contract, not by taste: a resolver has one resolve
+ * window to answer in, and a request still hanging when the window shuts has
+ * cost the agent the whole market. Two attempts at 70s plus backoff leaves
+ * comfortable room inside the 300s window for the chain write that follows.
+ *
+ * A search-and-generate round trip measured ~10s, so 70s is not a tight budget
+ * — it is a ceiling on how long a stall is allowed to run.
+ */
+const TIMEOUT_MS = Number(process.env.OPENROUTER_TIMEOUT_MS ?? 70_000);
+const ATTEMPTS = Number(process.env.OPENROUTER_ATTEMPTS ?? 2);
+
+/**
  * Cheap enough to run on every market, current enough to search well. This is a
  * default, not a recommendation — `OPENROUTER_MODEL` overrides it, and the model
  * used is recorded in the evidence so a reader knows what answered.
@@ -72,6 +86,86 @@ interface Annotation {
   url_citation?: { url?: string };
 }
 
+interface ModelMessage {
+  content?: string;
+  annotations?: Annotation[];
+}
+
+/** Marks a failure worth trying again, as opposed to one that will always fail. */
+class TransientError extends Error {}
+
+/**
+ * Retry only what a second attempt could plausibly fix.
+ *
+ * A 401 or a 400 is a verdict on the request itself: sending it again wastes the
+ * resolve window and arrives at the same answer. A timeout, a dropped socket, a
+ * 429 or a 5xx says nothing about the request, so those get one more try.
+ */
+function isTransientStatus(status: number): boolean {
+  return status === 408 || status === 409 || status === 429 || status >= 500;
+}
+
+async function postOnce(apiKey: string, body: string): Promise<ModelMessage> {
+  let res: Response;
+  try {
+    res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        // Names the caller in the key owner's own dashboard. No URL, no identity.
+        "X-Title": "Verdict",
+      },
+      body,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (err) {
+    // Aborts and socket failures both land here and both deserve another try.
+    const e = err as Error;
+    const reason = e.name === "TimeoutError" ? `no response in ${TIMEOUT_MS}ms` : e.message;
+    throw new TransientError(`OpenRouter request failed: ${reason}`);
+  }
+
+  if (!res.ok) {
+    const detail = (await res.text().catch(() => "")).slice(0, 400);
+    const message = `OpenRouter returned ${res.status} ${res.statusText}. ${detail}`;
+    throw isTransientStatus(res.status) ? new TransientError(message) : new Error(message);
+  }
+
+  const payload = (await res.json().catch(() => {
+    throw new TransientError("OpenRouter returned a body that is not JSON.");
+  })) as { choices?: { message?: ModelMessage }[]; error?: { message?: string } };
+
+  if (payload.error) {
+    // An error inside a 200 is how OpenRouter reports some upstream failures.
+    throw new TransientError(`OpenRouter reported an error: ${payload.error.message}`);
+  }
+
+  const message = payload.choices?.[0]?.message;
+  if (!message?.content) {
+    throw new TransientError("Model returned no content.");
+  }
+  return message;
+}
+
+/** `postOnce`, plus one more go at anything transient. */
+async function post(apiKey: string, body: string): Promise<ModelMessage> {
+  let last: Error | undefined;
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+    try {
+      return await postOnce(apiKey, body);
+    } catch (err) {
+      if (!(err instanceof TransientError)) throw err;
+      last = err;
+      if (attempt < ATTEMPTS) {
+        console.log(`  ${err.message} — retrying (${attempt}/${ATTEMPTS - 1})`);
+        await new Promise((r) => setTimeout(r, 2000 * attempt));
+      }
+    }
+  }
+  throw new Error(`${last?.message} Gave up after ${ATTEMPTS} attempts.`);
+}
+
 export class ResearchSource implements ResolutionSource {
   readonly id = "research";
   readonly sourceClass: SourceClass = "research";
@@ -91,62 +185,35 @@ export class ResearchSource implements ResolutionSource {
 
     const model = process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
 
-    const res = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${ctx.openRouterApiKey}`,
-        "Content-Type": "application/json",
-        // Names the caller in the key owner's own dashboard. No URL, no identity.
-        "X-Title": "Verdict",
+    const body = JSON.stringify({
+      model,
+      max_tokens: 16000,
+      // OpenRouter's own search plugin, so the capability does not depend on
+      // the chosen model shipping a server-side search tool of its own.
+      plugins: [{ id: "web", max_results: 6 }],
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: "verdict", strict: true, schema: jsonSchema() },
       },
-      body: JSON.stringify({
-        model,
-        max_tokens: 16000,
-        // OpenRouter's own search plugin, so the capability does not depend on
-        // the chosen model shipping a server-side search tool of its own.
-        plugins: [{ id: "web", max_results: 6 }],
-        response_format: {
-          type: "json_schema",
-          json_schema: { name: "verdict", strict: true, schema: jsonSchema() },
+      messages: [
+        { role: "system", content: SYSTEM },
+        {
+          role: "user",
+          content:
+            `Question: ${ctx.question.title}\n\n` +
+            `Resolution criteria: ${ctx.question.criteria}\n\n` +
+            `Claim to determine: ${r.claim}\n\n` +
+            `Where to look: ${r.guidance}\n\n` +
+            `Answer YES if the claim is true, NO if it is false.`,
         },
-        messages: [
-          { role: "system", content: SYSTEM },
-          {
-            role: "user",
-            content:
-              `Question: ${ctx.question.title}\n\n` +
-              `Resolution criteria: ${ctx.question.criteria}\n\n` +
-              `Claim to determine: ${r.claim}\n\n` +
-              `Where to look: ${r.guidance}\n\n` +
-              `Answer YES if the claim is true, NO if it is false.`,
-          },
-        ],
-      }),
+      ],
     });
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(
-        `OpenRouter returned ${res.status} ${res.statusText}. ${body.slice(0, 400)}`,
-      );
-    }
-
-    const payload = (await res.json()) as {
-      choices?: { message?: { content?: string; annotations?: Annotation[] } }[];
-      error?: { message?: string };
-    };
-    if (payload.error) {
-      throw new Error(`OpenRouter reported an error: ${payload.error.message}`);
-    }
-
-    const message = payload.choices?.[0]?.message;
-    if (!message?.content) {
-      throw new Error("Model returned no content.");
-    }
+    const message = await post(ctx.openRouterApiKey, body);
 
     let parsed: z.infer<typeof Verdict>;
     try {
-      parsed = Verdict.parse(JSON.parse(message.content));
+      parsed = Verdict.parse(JSON.parse(message.content as string));
     } catch (err) {
       throw new Error(`Model returned no parseable verdict: ${(err as Error).message}`);
     }
