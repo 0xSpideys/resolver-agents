@@ -5,7 +5,9 @@ import { TESTNET, type Market } from "@verdict/sdk";
 
 import { useWallet } from "@/components/wallet";
 import { useNow } from "@/hooks/useNow";
+import { useAsync } from "@/hooks/useAsync";
 import { amount } from "@/components/ui";
+import { getXlmPrice } from "@/lib/chain";
 
 /** Money is 7 decimals; the field takes whole units. */
 const UNIT = 10_000_000n;
@@ -213,6 +215,11 @@ function Bet({
   const stroops = toStroops(value);
   const valid = stroops !== null && stroops > 0n;
 
+  const isXlm = market.token === TESTNET.token;
+  const { data: xlmPrice } = useAsync("xlm-usd", getXlmPrice);
+  const usdValue =
+    isXlm && valid && xlmPrice ? Number(value) * xlmPrice : null;
+
   async function place() {
     if (!verdict || !address || !valid) return;
     setBusy(true);
@@ -260,8 +267,11 @@ function Bet({
             aria-label="Amount"
             className="w-20 bg-transparent font-data text-[0.9rem] outline-none"
           />
-          <span className="tag">{market.token === TESTNET.token ? "XLM" : "VUSD"}</span>
+          <span className="tag">{isXlm ? "XLM" : "VUSD"}</span>
         </label>
+        {usdValue !== null ? (
+          <span className="text-[0.8rem] text-dim">≈ ${usdValue.toFixed(2)}</span>
+        ) : null}
 
         <button
           type="button"

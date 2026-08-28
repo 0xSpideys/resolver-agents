@@ -1,7 +1,9 @@
 import {
   decodeEvidence,
   decodeQuestion,
+  Reflector,
   readOnlyVerdict,
+  TESTNET,
   toHex,
   verifyEvidence,
   verifyQuestion,
@@ -118,6 +120,17 @@ export async function listAgents(cases: Case[]): Promise<AgentRecord[]> {
     }),
   );
   return Promise.all([...ids].sort((a, b) => a - b).map(getAgentRecord));
+}
+
+/** XLM/USD from Reflector's CEX/DEX aggregate. `null` when the feed has nothing yet. */
+export async function getXlmPrice(): Promise<number | null> {
+  const { chain } = readOnlyVerdict();
+  const reflector = new Reflector(chain, TESTNET.reflector.external);
+  const [data, decimals] = await Promise.all([
+    reflector.lastPrice({ kind: "other", symbol: "XLM" }),
+    reflector.decimals(),
+  ]);
+  return data ? Number(Reflector.format(data.price, decimals)) : null;
 }
 
 export { decodeQuestion, toHex };
