@@ -218,16 +218,18 @@ seeing identical facts would commit to different hashes.
 
 ### Agents — five registered, all ours
 
-Agents 18–23 on the live 8004 registry. Current standing:
+Agents 18–23 on the live 8004 registry. A snapshot — every demo run moves
+these, so read them off the chain rather than trusting the table:
 
 | Agent | Record | Weight |
 |---|---|---|
-| #21 | 7 right / 0 wrong | 3.00× |
-| #22 | 6 right / 0 wrong | 3.00× |
-| #23 | 1 right / 8 wrong | 1.23× |
+| #21 | 9 right / 0 wrong | 3.00× |
+| #22 | 8 right / 0 wrong | 3.00× |
+| #23 | 1 right / 10 wrong | 1.19× |
 
-#23 sitting at 1.23× rather than the floor is the design working: weight is a
-function of the record, not a good/bad flag.
+#23 drifting down through 1.25× → 1.23× → 1.19× rather than snapping to the
+floor is the design working: weight is a continuous function of the record, not
+a good/bad flag.
 
 ### The dApp — done
 
