@@ -191,7 +191,7 @@ holds.** Before this the hash was a placeholder and nothing checked it, so
 Markets #0–#4 predate this and show as unverifiable. They are shown in an
 Archive group rather than hidden.
 
-### Three resolution sources — two proven, one untested
+### Three resolution sources — all three proven
 
 `apps/resolver-agent/src/sources/`. **The question declares which one it takes**,
 and every evidence document carries the source class, because presenting all
@@ -201,7 +201,7 @@ three as equally verified would be the first claim an auditor breaks.
 |---|---|---|
 | `reflector` | `onchain` — re-derivable by anyone forever | ✅ proven on testnet |
 | `open-meteo` | `public-api` — re-runnable, but you trust the provider | ✅ proven on testnet |
-| `research` | `research` — Claude + web search, not reproducible | ⚠️ **written, never run** |
+| `research` | `research` — model + web search, not reproducible | ✅ proven on testnet |
 | `contrarian` | demo fixture that inverts a real finding | ✅ used for the penalty path |
 
 **Reflector is the only oracle actually deployed on Stellar testnet.** The docs
@@ -222,11 +222,11 @@ Agents 18–23 on the live 8004 registry. Current standing:
 
 | Agent | Record | Weight |
 |---|---|---|
-| #21 | 6 right / 0 wrong | 3.00× |
+| #21 | 7 right / 0 wrong | 3.00× |
 | #22 | 6 right / 0 wrong | 3.00× |
-| #23 | 1 right / 7 wrong | 1.25× |
+| #23 | 1 right / 8 wrong | 1.23× |
 
-#23 sitting at 1.25× rather than the floor is the design working: weight is a
+#23 sitting at 1.23× rather than the floor is the design working: weight is a
 function of the record, not a good/bad flag.
 
 ### The dApp — done
@@ -276,21 +276,23 @@ correctly (`market.token === TESTNET.token ? "XLM" : "VUSD"` in
 **2. Pushed and live.** `main` is on `origin`, the Pages workflow ran, and the
 site serves at `https://0xspideys.github.io/resolver-agents/`.
 
-**3. Research agent untested.** Routed through **OpenRouter**, not a single
-vendor: `OPENROUTER_API_KEY` from an isolated account, model from
+**3. Research agent — proven on testnet.** Routed through **OpenRouter**, not a
+single vendor: `OPENROUTER_API_KEY` from an isolated account, model from
 `OPENROUTER_MODEL` defaulting to `google/gemini-3.7-flash`. Structured output
 via `response_format: json_schema` (strict), web search via OpenRouter's own
 `plugins: [{id:"web"}]`, so the capability does not depend on the chosen model
-shipping a search tool. Plain `fetch`, no SDK dependency.
+shipping a search tool. Plain `fetch`, no SDK dependency. Copy `.env.example`
+to `.env` and fill in the key.
 
-Verified so far: schema generation, all three error paths, and that a
-well-formed request reaches OpenRouter (a bad key returns 401, not 400). What
-has *never* run is a real completion — the reply parsing and the citation
-merge are unexercised until a valid key is present. Copy `.env.example` to
-`.env` and fill in `OPENROUTER_API_KEY`.
+Market #16 ran the whole loop: agent #21 researched the question with live web
+search and submitted YES at 3.00×, agent #23 submitted NO at 1.25×, the
+weighted tally took YES at 300/425, and settlement paid #21 and slashed #23.
+Evidence verified, reputation written to 8004.
 
-It is the strongest part of the story — "an agent that actually goes and reads"
-— so land it as soon as the key arrives.
+**Two runs of the same question produced different key facts and a different
+caveat.** That is the source class behaving as documented, not a defect — but
+it is why `research` questions carry the `research` class and why the caveat is
+part of the evidence contract.
 
 ### Known gaps, not blocking
 
@@ -306,6 +308,12 @@ It is the strongest part of the story — "an agent that actually goes and reads
 - **No audit, testnet only.**
 - No demo video.
 - `apps/site` reads markets in a loop with no indexer. Fine at this scale.
+- **The OpenRouter call has no timeout and no retry.** One request aborted
+  mid-run during the market #16 cycle and the agent simply skipped that market;
+  a rerun went through. Harmless where an agent polls, but it means a single
+  transient failure can cost an agent a resolve window it cannot get back.
+  `contrarian` inherits this, since it wraps a real research finding rather
+  than inventing one.
 
 `docs/V2_ROADMAP.md` lists twelve extension points deliberately built into v1.
 
@@ -406,14 +414,12 @@ changes — the site renders the committed file, and Pages has no Rust toolchain
 
 ## 10. Suggested next steps, in order
 
-1. **Ask about pushing.** 7 commits and a working Pages workflow are sitting
-   idle. A public URL is the difference between a demo and a description.
-2. **Open a fresh demo market on the native XLM token** to exercise the new,
-   trustline-free path end to end.
-3. **Research agent**, the moment the API key arrives. Then open a market of all
-   three kinds and let the sources disagree — that is the strongest single
-   moment the demo has.
-4. **Demo video / runbook**, if they want one.
+1. **A timeout and one retry on the OpenRouter call.** The cheapest fix on this
+   list and the only one that has already bitten. See "Known gaps".
+2. **Demo video / runbook**, if they want one. Market #16 is the cycle worth
+   recording: two agents disagreeing, weight deciding, reputation moving.
+3. **Regenerate `report.json`** whenever the contract next changes. It is
+   current as of the 43-test suite and the deployed wasm hash still matches.
 
 Then, only if there is appetite: staked arbitration (v2 pillar 1), permissionless
 market creation (pillar 2), mainnet + audit (pillar 3).
