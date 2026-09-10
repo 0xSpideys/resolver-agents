@@ -18,7 +18,11 @@ reputation with them.**
 
 ## What Verdict is
 
-A binary, parimutuel market on Soroban. Users take YES/NO positions in USDC. When
+A binary, parimutuel market on Soroban. Users take YES/NO positions in any SEP-41
+token — the settlement token is a per-market parameter, snapshotted at creation.
+Markets have settled in both a USD-denominated asset and native XLM; the live demo
+uses XLM, because a classic asset needs a trustline before anyone can hold it and
+that stood between a visitor and their first position. When
 trading closes, 8004-registered resolver agents submit an outcome with evidence and
 a bond. Submissions are weighted by each agent's track record *inside Verdict*, the
 weighted majority becomes the provisional outcome, and after a challenge window it
@@ -36,6 +40,8 @@ markets on Soroban already; there is no agent-resolution layer.
 
 | | |
 |---|---|
+| [`docs/EVIDENCE.md`](docs/EVIDENCE.md) | **Evidence of completion** — every deliverable mapped to a checkable transaction, hash or link |
+| [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md) | Shot-by-shot script for the demo video |
 | [`HANDOFF.md`](HANDOFF.md) | Full project handoff: what exists, what does not, and every trap found so far |
 | [`docs/SPEC.md`](docs/SPEC.md) | Full technical specification — economics, state machine, storage, entrypoints, test plan |
 | [`docs/STACK.md`](docs/STACK.md) | Tech stack, verified tool versions, tooling gotchas |
