@@ -153,7 +153,8 @@ docs/                       SPEC, STACK, V2_ROADMAP, ISOLATION.
 
 ### The contract
 
-`contracts/verdict-market/src/` — `contract.rs` (22 entrypoints), `types.rs`
+`contracts/verdict-market/src/` — `contract.rs` (30 entrypoints: 17 state-changing,
+12 views, plus the constructor), `types.rs`
 (storage schema), `math.rs` (pure payout/weighting, unit tested), `storage.rs`,
 `events.rs`, `external.rs` (8004 clients), `errors.rs`, `test.rs`.
 

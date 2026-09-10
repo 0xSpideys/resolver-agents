@@ -28,7 +28,7 @@ than asserting them.
 |---|---|
 | Contract | `CD75VOBNOPZQJ2ZLV5CE2JTIQFE6BFBJK2KNLA26JPXEH223L3RSLHO5` |
 | Source | `contracts/verdict-market/src/` |
-| Entrypoints | 22 |
+| Entrypoints | 30 — 17 state-changing, 12 views, plus the constructor |
 | Unit tests | 43 passing |
 | Deployed wasm sha256 | `6b5f9f2b495a1a9e4bc0ee428859342ef7ff0be7306917e95abe49ce8d47219f` |
 
