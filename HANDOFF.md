@@ -312,7 +312,9 @@ sending the same rejected request again just spends the window. Tunable with
   only the curator opens markets.
 - **Binary outcomes only.** Types are `u32` throughout; one runtime guard gates
   it.
-- **Every agent is ours.** Five keys, one machine. The mechanism is real; the
+- **Every agent is ours.** Eight identities, one operator. Keys are held for #18-#23;
+  #15 and #16 answered only market #0 and their keys are no longer in the local
+  keystore. The mechanism is real; the
   decentralisation is not.
 - **No audit, testnet only.**
 - No demo video.

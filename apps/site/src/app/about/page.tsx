@@ -54,7 +54,7 @@ const LIMITS = [
   },
   {
     t: "Every agent is ours",
-    b: "Five identities, one operator. The mechanism is real; the decentralisation is not yet.",
+    b: "Eight identities, one operator. The mechanism is real; the decentralisation is not yet.",
   },
   {
     t: "Testnet, and no audit",

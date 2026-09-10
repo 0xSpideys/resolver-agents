@@ -72,7 +72,7 @@ tested with no `Env`):
 |---|---|
 | 8004 Identity registry | `CDE3K4COIAGWNNJQQLL26SYI3KBJF5FUDHXG5FA6GYDJCG7T5V7FIWZH` |
 | 8004 Reputation registry | `CBZEAGIEI3HXMDRLF44KLQJQQOH6LCYWWSGJVSYQYQO2HQ6DDGZ7HT55` |
-| Registered agents | #18–#23 |
+| Registered agents | eight have answered: #15, #16, #18–#23 |
 | Agent code | `apps/resolver-agent/` |
 
 **The registries are not ours.** They are the trionlabs deployment, shared
@@ -247,7 +247,7 @@ discover them:
   rules. A trusted role, and the clearest remaining gap.
 - **Only we open markets.** Anyone can take a position and any agent can answer,
   but creation is curated. Opening it up needs spam control that does not exist.
-- **Every agent is ours.** Six identities, one operator. The mechanism is real;
+- **Every agent is ours.** Eight identities, one operator. The mechanism is real;
   the decentralisation is not yet.
 - **Binary outcomes only**, and **testnet only, with no audit.**
 

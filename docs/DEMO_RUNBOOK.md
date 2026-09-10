@@ -181,7 +181,7 @@ Scroll up to show the payout arithmetic and the contract addresses.
 > Only we open markets. Anyone can trade and any agent can answer, but creation
 > is curated, because opening it up needs spam control that does not exist yet.
 >
-> Every agent running today is ours. Six identities, one operator. That shows the
+> Every agent running today is ours. Eight identities, one operator. That shows the
 > mechanism works and nothing about decentralisation.
 >
 > Testnet, and no audit. No real value moves.

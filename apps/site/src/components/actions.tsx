@@ -46,6 +46,7 @@ export function MarketActions({
 
   const now = useNow();
   const state = market.state;
+  const funding = useFunding();
 
   const canClose = state === "Open" && now >= Number(market.close_ts);
   const canTally = state === "Resolving" && now >= Number(market.resolve_deadline);
@@ -94,11 +95,21 @@ export function MarketActions({
     );
   }
 
+  const canBet = state === "Open" && now < Number(market.close_ts);
+  const hasLifecycle = canClose || canTally || canFinalize || canSettleAgents || won;
+  const hasStake = Boolean(yourStake && (yourStake.yes > 0n || yourStake.no > 0n));
+
+  // A settled market with nothing left to do would otherwise render an empty
+  // bordered box under the ruling — visible, and meaningless.
+  if (!funding.needed && !canBet && !hasLifecycle && !hasStake && !error && !done) {
+    return null;
+  }
+
   return (
     <Panel>
-      <Funding />
+      {funding.needed ? <Funding funding={funding} /> : null}
 
-      {state === "Open" && now < Number(market.close_ts) ? (
+      {canBet ? (
         <Bet market={market} onDone={onDone} setError={setError} setDone={setDone} />
       ) : null}
 
@@ -200,6 +211,28 @@ export function MarketActions({
 }
 
 /**
+ * Whether the connected account needs funding before it can do anything.
+ *
+ * Lifted out of the prompt itself so the panel around it can know whether it
+ * has anything to show. `undefined` while the balance is still being read.
+ */
+function useFunding() {
+  const { address } = useWallet();
+  const [nonce, setNonce] = useState(0);
+
+  const { data: balance } = useAsync(`balance:${address}:${nonce}`, () =>
+    address ? getXlmBalance(address) : Promise.resolve(null),
+  );
+
+  return {
+    // Enough to stake and still pay a fee.
+    needed: balance === undefined ? undefined : balance === null || balance < 2,
+    empty: balance === null,
+    refresh: () => setNonce((n) => n + 1),
+  };
+}
+
+/**
  * Offers to fund the connected account, and says nothing once it is funded.
  *
  * Without this the wallet button is a shop window: a freshly installed wallet
@@ -207,15 +240,10 @@ export function MarketActions({
  * nothing on the page explains why. Native XLM needs no trustline, so a
  * friendbot call is the whole distance between connecting and trading.
  */
-function Funding() {
+function Funding({ funding }: { funding: ReturnType<typeof useFunding> }) {
   const { address } = useWallet();
-  const [nonce, setNonce] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const { data: balance } = useAsync(`balance:${address}:${nonce}`, () =>
-    address ? getXlmBalance(address) : Promise.resolve(null),
-  );
 
   async function fund() {
     if (!address) return;
@@ -223,7 +251,7 @@ function Funding() {
     setError(null);
     try {
       await fundTestnetAccount(address);
-      setNonce((n) => n + 1);
+      funding.refresh();
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -231,14 +259,10 @@ function Funding() {
     }
   }
 
-  // Still reading, or funded well enough to stake and pay a fee.
-  if (balance === undefined) return null;
-  if (balance !== null && balance >= 2) return null;
-
   return (
     <div className="mb-4 rounded-lg border border-line-firm px-3 py-2.5">
       <p className="text-[0.82rem] text-mid">
-        {balance === null
+        {funding.empty
           ? "This account does not exist on testnet yet."
           : "This account has almost no testnet XLM."}{" "}
         Positions and bonds are paid in XLM.
