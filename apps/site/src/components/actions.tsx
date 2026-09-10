@@ -7,7 +7,7 @@ import { useWallet } from "@/components/wallet";
 import { useNow } from "@/hooks/useNow";
 import { useAsync } from "@/hooks/useAsync";
 import { amount } from "@/components/ui";
-import { getXlmPrice } from "@/lib/chain";
+import { fundTestnetAccount, getXlmBalance, getXlmPrice } from "@/lib/chain";
 
 /** Money is 7 decimals; the field takes whole units. */
 const UNIT = 10_000_000n;
@@ -87,7 +87,8 @@ export function MarketActions({
           {connecting ? "Connecting…" : "Connect wallet"}
         </button>
         <p className="mt-3 text-[0.78rem] text-dim">
-          Testnet only. You will need testnet XLM to take a position.
+          Testnet only. Positions are paid in XLM, and you can fund an empty
+          account from here once it is connected.
         </p>
       </Panel>
     );
@@ -95,6 +96,8 @@ export function MarketActions({
 
   return (
     <Panel>
+      <Funding />
+
       {state === "Open" && now < Number(market.close_ts) ? (
         <Bet market={market} onDone={onDone} setError={setError} setDone={setDone} />
       ) : null}
@@ -193,6 +196,63 @@ export function MarketActions({
       {error ? <Note tone="no">{error}</Note> : null}
       {done ? <Note tone="yes">{done}</Note> : null}
     </Panel>
+  );
+}
+
+/**
+ * Offers to fund the connected account, and says nothing once it is funded.
+ *
+ * Without this the wallet button is a shop window: a freshly installed wallet
+ * has an account that does not exist on the network, every write fails, and
+ * nothing on the page explains why. Native XLM needs no trustline, so a
+ * friendbot call is the whole distance between connecting and trading.
+ */
+function Funding() {
+  const { address } = useWallet();
+  const [nonce, setNonce] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: balance } = useAsync(`balance:${address}:${nonce}`, () =>
+    address ? getXlmBalance(address) : Promise.resolve(null),
+  );
+
+  async function fund() {
+    if (!address) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await fundTestnetAccount(address);
+      setNonce((n) => n + 1);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Still reading, or funded well enough to stake and pay a fee.
+  if (balance === undefined) return null;
+  if (balance !== null && balance >= 2) return null;
+
+  return (
+    <div className="mb-4 rounded-lg border border-line-firm px-3 py-2.5">
+      <p className="text-[0.82rem] text-mid">
+        {balance === null
+          ? "This account does not exist on testnet yet."
+          : "This account has almost no testnet XLM."}{" "}
+        Positions and bonds are paid in XLM.
+      </p>
+      <button
+        type="button"
+        onClick={fund}
+        disabled={busy}
+        className="btn mt-2.5 disabled:opacity-60"
+      >
+        {busy ? "Funding…" : "Get testnet XLM"}
+      </button>
+      {error ? <p className="mt-2 text-[0.78rem] text-no">{error}</p> : null}
+    </div>
   );
 }
 

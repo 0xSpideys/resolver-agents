@@ -122,6 +122,44 @@ export async function listAgents(cases: Case[]): Promise<AgentRecord[]> {
   return Promise.all([...ids].sort((a, b) => a - b).map(getAgentRecord));
 }
 
+/**
+ * Native XLM balance, in whole XLM. `null` means the account does not exist on
+ * the network yet — an unfunded testnet key, which is the normal state for a
+ * visitor who just installed a wallet.
+ *
+ * Read from Horizon rather than the token contract: an account with no ledger
+ * entry has no balance to read, and Horizon says so plainly with a 404 where a
+ * contract call would just fail.
+ */
+export async function getXlmBalance(address: string): Promise<number | null> {
+  const res = await fetch(`${TESTNET.horizonUrl}/accounts/${address}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Horizon returned ${res.status}.`);
+  const account = (await res.json()) as {
+    balances?: { asset_type?: string; balance?: string }[];
+  };
+  const native = account.balances?.find((b) => b.asset_type === "native");
+  return native?.balance ? Number(native.balance) : 0;
+}
+
+/**
+ * Fund a testnet account from friendbot.
+ *
+ * The reason this exists as a button: the settlement token is native XLM, so a
+ * visitor needs nothing but a funded account to take a position — and telling
+ * someone to go and find a faucet is where a demo loses them. Testnet only;
+ * there is no equivalent on pubnet and there should not be.
+ */
+export async function fundTestnetAccount(address: string): Promise<void> {
+  const res = await fetch(`https://friendbot.stellar.org/?addr=${address}`);
+  if (res.ok) return;
+  // Friendbot answers 400 for an account it has already funded, which is not a
+  // failure from the visitor's point of view.
+  const body = await res.text().catch(() => "");
+  if (/already.*funded|op_already_exists/i.test(body)) return;
+  throw new Error(`Friendbot returned ${res.status}. ${body.slice(0, 200)}`);
+}
+
 /** XLM/USD from Reflector's CEX/DEX aggregate. `null` when the feed has nothing yet. */
 export async function getXlmPrice(): Promise<number | null> {
   const { chain } = readOnlyVerdict();
