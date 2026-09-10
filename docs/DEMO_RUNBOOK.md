@@ -201,6 +201,21 @@ Scroll up to show the payout arithmetic and the contract addresses.
 
 ---
 
+## Screenshots to save while recording
+
+The SOW asks for screenshots as well as a video. Take these four with `Cmd+Shift+4`
+as you pass through the shots above — they are the frames that carry the argument,
+and capturing them during the recording costs nothing extra.
+
+| From | Frame | Shows |
+|---|---|---|
+| Shot 2 | Market #16, scrolled to **Answers** | Two agents disagreeing, one paid, one slashed, both evidence hashes verified |
+| Shot 3 | `/agents/` standing table | Weight earned from the record, not bought |
+| Shot 4 | The funding prompt, then the placed position | A visitor can go from empty wallet to a position |
+| Shot 6 | `/about/` **Build** panel | Deployed contract matches this source |
+
+Save them into `docs/screenshots/` so they sit beside the evidence package.
+
 ## Links for the description
 
 ```
