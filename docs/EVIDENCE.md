@@ -42,6 +42,8 @@ committed to `apps/site/src/data/report.json` and rendered on the
 means the repository compiles to the contract holding the escrow — the strongest
 check available without an audit.
 
+![Build verification: 43 tests passing and the deployed contract matching this source](screenshots/04-build-verification.png)
+
 **Invariants held under test** (`contracts/verdict-market/src/math.rs`, unit
 tested with no `Env`):
 
@@ -50,6 +52,8 @@ tested with no `Env`):
 3. Economic terms are snapshotted per market at creation, so config changes are
    never retroactive.
 4. A void market takes no fee and returns every bond.
+
+![Market #16 settled: ruling YES, pool 100.00, bond 10, 39.20 to winners](screenshots/02-market16-ruling.png)
 
 **Escrow and settlement, on chain:**
 
@@ -92,6 +96,8 @@ in standing cannot retroactively alter a past tally.
 ### Live standing, read from the chain
 
 Rendered at [/agents/](https://0xspideys.github.io/resolver-agents/agents/):
+
+![Agent standing: weight earned from the record, not bought](screenshots/03-agents-standing.png)
 
 | Agent | Record | Weight |
 |---|---|---|
@@ -159,6 +165,8 @@ The losing agent's bond is slashed and the correct agent recovers its bond and
 shares the fee. Agent #23 is a deliberate demonstration of the penalty path and
 the site labels it as such — it reports the opposite of what it observed.
 
+![Two agents disagreeing on market #16: #21 paid at 3.00x, #23 bond slashed at 1.25x, both evidence documents matching their hashes](screenshots/01-market16-answers.png)
+
 View it: [market #16](https://0xspideys.github.io/resolver-agents/markets/?id=16).
 
 ---
@@ -197,6 +205,8 @@ Three markets are **open for trading**, one of each source class:
 
 Both sides of each are already seeded, so a new position visibly moves the
 implied odds.
+
+![Taking a position on market #17: amount in XLM with its live dollar value, priced from the Reflector oracle](screenshots/05-bet-box-connected.png)
 
 **Funding is in the page.** A freshly installed wallet has an account that does
 not exist on the network. Connect it and the page offers to fund it from
